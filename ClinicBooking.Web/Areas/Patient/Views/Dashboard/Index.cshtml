@@ -1,0 +1,111 @@
+@using ClinicBooking.Application.Common.DTOs
+@model IReadOnlyList<AppointmentDto>
+@{
+    ViewData["Title"] = "My Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="fw-bold text-dark">Hello, @ViewBag.Patient?.FullName 👋</h2>
+    <span class="text-muted"><i class="fa-regular fa-calendar me-1"></i> @DateTime.Now.ToString("dd MMM yyyy")</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 bg-primary text-white position-relative overflow-hidden">
+            <div class="position-absolute end-0 top-0 opacity-25 p-3 fs-1"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="card-body p-4 position-relative z-1">
+                <h6 class="fw-normal mb-1 text-white-50">Total Appointments</h6>
+                <h1 class="display-5 fw-bold mb-0">@ViewBag.TotalAppointments</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 bg-success text-white position-relative overflow-hidden">
+            <div class="position-absolute end-0 top-0 opacity-25 p-3 fs-1"><i class="fa-solid fa-clock"></i></div>
+            <div class="card-body p-4 position-relative z-1">
+                <h6 class="fw-normal mb-1 text-white-50">Upcoming Visits</h6>
+                <h1 class="display-5 fw-bold mb-0">@ViewBag.UpcomingAppointments</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <a asp-area="Patient" asp-controller="Booking" asp-action="SelectDoctor"
+           class="card border-0 shadow-sm rounded-4 text-decoration-none bg-white h-100 feature-card p-3 d-flex align-items-center justify-content-center text-center">
+            <div class="card-body">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center mx-auto mb-2" style="width: 50px; height: 50px;">
+                    <i class="fa-solid fa-plus fs-4"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-0">Book Appointment</h5>
+                <span class="small text-muted">Find doctors & available slots</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="fa-solid fa-calendar-days text-primary me-2"></i>Recent Appointments</h5>
+    <a asp-area="Patient" asp-controller="Appointment" asp-action="Index" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted">
+                    <tr>
+                        <th class="ps-4">Doctor</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var a in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
+                                            <i class="fa-solid fa-user-md"></i>
+                                        </div>
+                                        <span class="fw-bold text-dark">Dr. @a.DoctorName</span>
+                                    </div>
+                                </td>
+                                <td>@a.AppointmentDate.ToString("MMM dd, yyyy")</td>
+                                <td class="fw-medium text-primary">@a.StartTime.ToString(@"hh\:mm")</td>
+                                <td>
+                                    <span class="badge rounded-pill px-3 py-1 @(a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Pending ? "bg-warning text-dark" :
+                                                         a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Confirmed ? "bg-primary text-white" :
+                                                         a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Completed ? "bg-success text-white" : "bg-danger text-white")">
+                                        @a.Status
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a asp-area="Patient" asp-controller="Appointment" asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <div class="fs-1 text-light mb-3"><i class="fa-solid fa-calendar-xmark"></i></div>
+                                <h5>No Recent Appointments</h5>
+                                <p>You do not have any appointments yet.</p>
+                                <a asp-area="Patient" asp-controller="Booking" asp-action="SelectDoctor" class="btn btn-primary rounded-pill px-4 mt-2">
+                                    Book Now
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

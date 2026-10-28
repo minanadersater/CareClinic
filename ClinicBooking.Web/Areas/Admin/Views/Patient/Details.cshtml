@@ -1,0 +1,77 @@
+@model ClinicBooking.Application.Common.DTOs.PatientDto
+@{
+    ViewData["Title"] = "Patient Details";
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-circle me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0">Patient Profile</h3>
+                <span class="text-muted small">ID: #@Model.Id</span>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-1">@Model.FullName</h4>
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 rounded-pill">Registered Patient</span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold text-uppercase">Email</label>
+                        <p class="fs-6 fw-medium text-dark mb-0">
+                            <i class="fa-regular fa-envelope me-2 text-primary"></i>@Model.Email
+                        </p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold text-uppercase">Phone Number</label>
+                        <p class="fs-6 fw-medium text-dark mb-0">
+                            <i class="fa-solid fa-phone me-2 text-primary"></i>@Model.PhoneNumber
+                        </p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold text-uppercase">Date of Birth</label>
+                        <p class="fs-6 fw-medium text-dark mb-0">
+                            <i class="fa-regular fa-calendar me-2 text-primary"></i>@(Model.DateOfBirth?.ToString("MMMM dd, yyyy") ?? "Not specified")
+                        </p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold text-uppercase">Total Appointments</label>
+                        <p class="fs-6 fw-medium text-dark mb-0">
+                            <i class="fa-solid fa-calendar-check me-2 text-primary"></i>@Model.AppointmentCount appointments
+                        </p>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="text-muted small fw-bold text-uppercase">Address</label>
+                        <p class="fs-6 fw-medium text-dark mb-0">
+                            <i class="fa-solid fa-location-dot me-2 text-primary"></i>@(string.IsNullOrWhiteSpace(Model.Address) ? "No address provided" : Model.Address)
+                        </p>
+                    </div>
+                </div>
+
+                <hr class="my-4 text-muted" />
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back to Patients
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

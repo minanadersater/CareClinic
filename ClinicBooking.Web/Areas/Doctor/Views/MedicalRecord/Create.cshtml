@@ -1,0 +1,117 @@
+@model ClinicBooking.Web.ViewModels.Doctor.CreateRecordViewModel
+@{
+    ViewData["Title"] = "Create Medical Record";
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-10">
+        <div class="d-flex align-items-center mb-4">
+            <h3 class="fw-bold mb-0"><i class="fa-solid fa-file-medical text-primary me-2"></i>Medical Record for @Model.PatientName</h3>
+        </div>
+
+        <form asp-action="Create" method="post">
+            <input type="hidden" asp-for="AppointmentId" />
+            <input type="hidden" asp-for="PatientId" />
+            <input type="hidden" asp-for="PatientName" />
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-stethoscope text-muted me-2"></i>Clinical Notes</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 fw-medium"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Symptoms <span class="text-danger">*</span></label>
+                            <textarea asp-for="Symptoms" class="form-control rounded-3 bg-light border-0" rows="3" placeholder="Patient's symptoms..."></textarea>
+                            <span asp-validation-for="Symptoms" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Diagnosis <span class="text-danger">*</span></label>
+                            <textarea asp-for="Diagnosis" class="form-control rounded-3 bg-light border-0" rows="3" placeholder="Final diagnosis..."></textarea>
+                            <span asp-validation-for="Diagnosis" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Treatment Plan <span class="text-danger">*</span></label>
+                        <textarea asp-for="TreatmentPlan" class="form-control rounded-3 bg-light border-0" rows="2" placeholder="Recommended treatment..."></textarea>
+                        <span asp-validation-for="TreatmentPlan" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Additional Notes</label>
+                        <textarea asp-for="Notes" class="form-control rounded-3 bg-light border-0" rows="2" placeholder="Any private notes (optional)..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prescription Section -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-pills text-muted me-2"></i>Prescription</h5>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" asp-for="AddPrescription" id="addPrescriptionSwitch">
+                        <label class="form-check-label fw-medium ms-2" for="addPrescriptionSwitch">Add Prescription?</label>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4" id="prescriptionSection" style="display: none;">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Prescription Notes</label>
+                        <input asp-for="PrescriptionNotes" class="form-control rounded-3 bg-light border-0" placeholder="General pharmacy instructions..." />
+                    </div>
+
+                    <h6 class="fw-bold mb-3">Medicines</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Medicine Name</th>
+                                    <th>Dosage (e.g. 500mg)</th>
+                                    <th>Frequency (e.g. 1x Day)</th>
+                                    <th>Duration (Days)</th>
+                                    <th>Instructions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.Items.Count; i++)
+                                {
+                                    <tr>
+                                        <td><input asp-for="Items[i].MedicineName" class="form-control" /></td>
+                                        <td><input asp-for="Items[i].Dosage" class="form-control" /></td>
+                                        <td><input asp-for="Items[i].Frequency" class="form-control" /></td>
+                                        <td><input asp-for="Items[i].DurationDays" class="form-control" type="number" value="7" /></td>
+                                        <td><input asp-for="Items[i].Instructions" class="form-control" placeholder="e.g. After food" /></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <small class="text-muted"><i class="fa-solid fa-circle-info me-1"></i> Fill out the row above to add a medicine. Empty rows will be ignored.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end mb-5">
+                <button type="submit" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-sm">
+                    <i class="fa-solid fa-save me-2"></i> Save & Complete Appointment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('addPrescriptionSwitch').addEventListener('change', function() {
+            document.getElementById('prescriptionSection').style.display = this.checked ? 'block' : 'none';
+        });
+        // Run once on load to handle validation errors state
+        if (document.getElementById('addPrescriptionSwitch').checked) {
+            document.getElementById('prescriptionSection').style.display = 'block';
+        }
+    </script>
+}
+

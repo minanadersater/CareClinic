@@ -1,0 +1,320 @@
+@using ClinicBooking.Domain.Enums
+@model ClinicBooking.Web.ViewModels.Patient.CheckoutViewModel
+@{
+    ViewData["Title"] = "تأكيد الحجز والدفع";
+    var formattedDate = DateTime.Parse(Model.Date).ToString("dddd، dd MMMM yyyy");
+    var formattedTime = DateTime.Today.Add(Model.StartTime).ToString("hh:mm tt");
+}
+
+<div class="row justify-content-center mt-3 mb-5">
+    <div class="col-lg-10">
+        <!-- Back button & Page title -->
+        <div class="d-flex align-items-center mb-4">
+            <a asp-action="SelectSlot" asp-route-doctorId="@Model.DoctorId" asp-route-date="@Model.Date" class="btn btn-outline-secondary rounded-circle me-3" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0 text-dark">تأكيد الحجز وطريقة الدفع</h3>
+                <span class="text-muted small">خطوة واحدة لإتمام حجز موعدك الطبي</span>
+            </div>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger rounded-3 mb-4 shadow-sm">
+                <div class="fw-bold mb-1"><i class="fa-solid fa-triangle-exclamation me-2"></i>يرجى تصحيح الأخطاء التالية:</div>
+                <div asp-validation-summary="All" class="mb-0 small"></div>
+            </div>
+        }
+
+        <div class="row g-4">
+            <!-- Left Column: Booking Summary -->
+            <div class="col-lg-5 order-lg-2">
+                <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 110px;">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-receipt text-primary me-2"></i>تفاصيل الموعد والرسوم</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Doctor Info -->
+                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 50px; height: 50px; font-size: 1.3rem;">
+                                <i class="fa-solid fa-user-doctor"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1 text-dark">د. @Model.DoctorName</h6>
+                                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1 small">@Model.DoctorSpecialty</span>
+                            </div>
+                        </div>
+
+                        <!-- Date & Time -->
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1"><i class="fa-regular fa-calendar me-1 text-primary"></i>تاريخ الكشف:</div>
+                            <div class="fw-bold text-dark">@formattedDate</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1"><i class="fa-regular fa-clock me-1 text-primary"></i>وقت الموعد:</div>
+                            <div class="fw-bold text-primary">@formattedTime</div>
+                        </div>
+
+                        <div class="mb-3 pb-3 border-bottom">
+                            <div class="text-muted small mb-1"><i class="fa-solid fa-location-dot me-1 text-danger"></i>مقر العيادة:</div>
+                            <div class="small text-muted">@Model.ClinicAddress</div>
+                        </div>
+
+                        <!-- Fee Breakdown -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">قيمة الكشف الطبي</span>
+                            <span class="fw-medium text-dark">@Model.ConsultationFee.ToString("N2") ج.م</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">رسوم الخدمة والحجز</span>
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">مجاناً</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <span class="fw-bold text-dark fs-5">الإجمالي المطلوب</span>
+                            <span class="fw-bold text-success fs-4">@Model.ConsultationFee.ToString("N2") <span class="fs-6">ج.م</span></span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light border-0 py-3 text-center rounded-bottom-4">
+                        <small class="text-muted"><i class="fa-solid fa-shield-halved text-success me-1"></i>جميع المعاملات المالية مؤمنة ومشفرة بالكامل</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Payment Form -->
+            <div class="col-lg-7 order-lg-1">
+                <form asp-action="Checkout" method="post" id="checkoutForm">
+                    <input type="hidden" asp-for="DoctorId" />
+                    <input type="hidden" asp-for="Date" />
+                    <input type="hidden" asp-for="StartTime" />
+
+                    <!-- Notes -->
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-3 text-dark"><i class="fa-regular fa-comment-dots text-primary me-2"></i>ملاحظات الزيارة (اختياري)</h5>
+                            <div class="form-floating">
+                                <textarea asp-for="PatientNotes" class="form-control rounded-3 bg-light border-0" style="height: 90px;" placeholder="اكتب أي استفسار أو أعراض للطبيب..."></textarea>
+                                <label asp-for="PatientNotes" class="text-muted">سبب الزيارة أو ملاحظات طبية تود إبلاغ الطبيب بها</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method Selector -->
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
+                        <div class="card-header bg-white border-bottom py-3">
+                            <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-wallet text-primary me-2"></i>اختر طريقة الدفع</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3 mb-4">
+                                <!-- Cash Option -->
+                                <div class="col-md-6">
+                                    <div class="border rounded-4 p-3 payment-method-card cursor-pointer h-100 position-relative active-card" id="card-Cash" onclick="selectPaymentMethod('Cash')">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="@PaymentMethod.Cash" id="pmCash" checked>
+                                            <label class="form-check-label fw-bold text-dark w-100" for="pmCash">
+                                                <i class="fa-solid fa-money-bill-wave text-success fs-5 me-2"></i>نقداً في العيادة (Cash)
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block mt-2 ps-4">سدد رسوم الكشف (@Model.ConsultationFee ج.م) في مكتب الاستقبال عند الحضور للعيادة.</small>
+                                    </div>
+                                </div>
+
+                                <!-- Credit Card Option -->
+                                <div class="col-md-6">
+                                    <div class="border rounded-4 p-3 payment-method-card cursor-pointer h-100 position-relative" id="card-Card" onclick="selectPaymentMethod('CreditCard')">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="@PaymentMethod.CreditCard" id="pmCard">
+                                            <label class="form-check-label fw-bold text-dark w-100" for="pmCard">
+                                                <i class="fa-brands fa-cc-visa text-primary fs-5 me-1"></i>
+                                                <i class="fa-brands fa-cc-mastercard text-danger fs-5 me-2"></i>بطاقة بنكية (Visa / Master)
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block mt-2 ps-4">دفع إلكتروني فوري ببطاقات الفيزا، ماستركارد، أو بطاقة ميزة الوطنية.</small>
+                                    </div>
+                                </div>
+
+                                <!-- Mobile Wallet Option -->
+                                <div class="col-md-6">
+                                    <div class="border rounded-4 p-3 payment-method-card cursor-pointer h-100 position-relative" id="card-Wallet" onclick="selectPaymentMethod('MobileWallet')">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="@PaymentMethod.MobileWallet" id="pmWallet">
+                                            <label class="form-check-label fw-bold text-dark w-100" for="pmWallet">
+                                                <i class="fa-solid fa-mobile-screen-button text-warning fs-5 me-2"></i>محفظة كاش إلكترونية
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block mt-2 ps-4">فودافون كاش، اتصالات كاش، أورنج كاش، أو محفظة وي باي.</small>
+                                    </div>
+                                </div>
+
+                                <!-- InstaPay Option -->
+                                <div class="col-md-6">
+                                    <div class="border rounded-4 p-3 payment-method-card cursor-pointer h-100 position-relative" id="card-InstaPay" onclick="selectPaymentMethod('InstaPay')">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="@PaymentMethod.InstaPay" id="pmInstaPay">
+                                            <label class="form-check-label fw-bold text-dark w-100" for="pmInstaPay">
+                                                <i class="fa-solid fa-bolt-lightning text-info fs-5 me-2"></i>إنستاباي (InstaPay)
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block mt-2 ps-4">تحويل لحظي فوري عبر شبكة المدفوعات اللحظية المصرية.</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Details Containers for Selected Methods -->
+                            <!-- Cash details -->
+                            <div id="details-Cash" class="payment-details-box bg-light p-3 rounded-3 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-circle-info text-success fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">الدفع نقداً عند الحضور للعيادة</h6>
+                                        <p class="mb-0 small text-muted">سيتم حجز موعدك فوراً كـ "قيد الدفع"، ويمكنك سداد المبلغ (@Model.ConsultationFee ج.م) نقداً في العيادة لموظف الاستقبال قبل الدخول للطبيب.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card Details -->
+                            <div id="details-CreditCard" class="payment-details-box bg-light p-4 rounded-3 mb-3" style="display: none;">
+                                <h6 class="fw-bold text-dark mb-3"><i class="fa-regular fa-credit-card me-2 text-primary"></i>بيانات البطاقة البنكية</h6>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label asp-for="CardNumber" class="form-label small fw-medium">رقم البطاقة (16 رقم)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-0"><i class="fa-regular fa-credit-card text-muted"></i></span>
+                                            <input asp-for="CardNumber" class="form-control rounded-end bg-white border-0 py-2" placeholder="4123 4567 8901 2345" maxlength="19" id="cardInput" />
+                                        </div>
+                                        <span asp-validation-for="CardNumber" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-12">
+                                        <label asp-for="CardHolderName" class="form-label small fw-medium">اسم صاحب البطاقة</label>
+                                        <input asp-for="CardHolderName" class="form-control rounded bg-white border-0 py-2" placeholder="AHMED MOHAMED" />
+                                        <span asp-validation-for="CardHolderName" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label small fw-medium">تاريخ الانتهاء</label>
+                                        <div class="d-flex gap-2">
+                                            <input asp-for="ExpiryMonth" class="form-control rounded bg-white border-0 py-2 text-center" placeholder="MM" maxlength="2" />
+                                            <input asp-for="ExpiryYear" class="form-control rounded bg-white border-0 py-2 text-center" placeholder="YY" maxlength="2" />
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <label asp-for="CVV" class="form-label small fw-medium">رمز الأمان (CVV)</label>
+                                        <input asp-for="CVV" class="form-control rounded bg-white border-0 py-2 text-center" placeholder="123" maxlength="4" type="password" />
+                                        <span asp-validation-for="CVV" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Wallet Details -->
+                            <div id="details-MobileWallet" class="payment-details-box bg-light p-4 rounded-3 mb-3" style="display: none;">
+                                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-mobile-screen me-2 text-warning"></i>بيانات المحفظة الإلكترونية</h6>
+                                <div class="mb-2">
+                                    <label asp-for="WalletNumber" class="form-label small fw-medium">رقم الهاتف المرتبط بالمحفظة</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-0"><i class="fa-solid fa-phone text-muted"></i></span>
+                                        <input asp-for="WalletNumber" class="form-control rounded-end bg-white border-0 py-2" placeholder="01012345678" maxlength="11" />
+                                    </div>
+                                    <span asp-validation-for="WalletNumber" class="text-danger small"></span>
+                                    <small class="text-muted d-block mt-2">ستصلك رسالة تأكيد أو إشعار خصم على المحفظة بقيمة @Model.ConsultationFee ج.م.</small>
+                                </div>
+                            </div>
+
+                            <!-- InstaPay Details -->
+                            <div id="details-InstaPay" class="payment-details-box bg-light p-4 rounded-3 mb-3" style="display: none;">
+                                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bolt me-2 text-info"></i>بيانات الدفع عبر إنستاباي</h6>
+                                <div class="mb-2">
+                                    <label asp-for="InstaPayHandle" class="form-label small fw-medium">عنوان الدفع اللحظي (IPA) أو رقم الهاتف</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-0">@@</span>
+                                        <input asp-for="InstaPayHandle" class="form-control rounded-end bg-white border-0 py-2" placeholder="username@instapay أو 01xxxxxxxxx" />
+                                    </div>
+                                    <span asp-validation-for="InstaPayHandle" class="text-danger small"></span>
+                                    <small class="text-muted d-block mt-2">سيتم إتمام التحويل الفوري مباشرة عبر شبكة المدفوعات اللحظية المصرية.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold fs-5 shadow-sm mb-4" id="submitBtn">
+                        <i class="fa-solid fa-circle-check me-2"></i> تأكيد الحجز نقداً (@Model.ConsultationFee ج.م)
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payment-method-card {
+        transition: all 0.25s ease;
+        border: 2px solid #e9ecef !important;
+        cursor: pointer;
+    }
+    .payment-method-card:hover {
+        border-color: #0d6efd !important;
+        background-color: #f8faff;
+    }
+    .payment-method-card.active-card {
+        border-color: #0d6efd !important;
+        background-color: #f0f7ff;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function selectPaymentMethod(method) {
+            // Update radios
+            document.querySelectorAll('input[name="PaymentMethod"]').forEach(r => {
+                r.checked = (r.value === method || (method === 'Cash' && r.value === '1') || (method === 'CreditCard' && r.value === '2') || (method === 'MobileWallet' && r.value === '3') || (method === 'InstaPay' && r.value === '4'));
+            });
+
+            // Update card styling
+            document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('active-card'));
+            var activeCardId = 'card-' + (method === '1' ? 'Cash' : method === '2' ? 'Card' : method === '3' ? 'Wallet' : method === '4' ? 'InstaPay' : method);
+            var cardEl = document.getElementById(activeCardId);
+            if (cardEl) cardEl.classList.add('active-card');
+
+            // Hide all detail boxes
+            document.querySelectorAll('.payment-details-box').forEach(b => b.style.display = 'none');
+
+            // Show selected detail box
+            var boxId = 'details-' + (method === '1' ? 'Cash' : method === '2' ? 'CreditCard' : method === '3' ? 'MobileWallet' : method === '4' ? 'InstaPay' : method);
+            var boxEl = document.getElementById(boxId);
+            if (boxEl) boxEl.style.display = 'block';
+
+            // Update button label
+            var btn = document.getElementById('submitBtn');
+            var fee = '@Model.ConsultationFee.ToString("N2")';
+            if (method === 'Cash' || method === '1') {
+                btn.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> تأكيد الحجز نقداً (' + fee + ' ج.م)';
+                btn.className = 'btn btn-success rounded-pill w-100 py-3 fw-bold fs-5 shadow-sm mb-4';
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-lock me-2"></i> إتمام الدفع الإلكتروني (' + fee + ' ج.م) وتأكيد الحجز';
+                btn.className = 'btn btn-primary rounded-pill w-100 py-3 fw-bold fs-5 shadow-sm mb-4';
+            }
+        }
+
+        // Initialize based on pre-selected radio
+        document.addEventListener('DOMContentLoaded', function() {
+            var checkedRadio = document.querySelector('input[name="PaymentMethod"]:checked');
+            if (checkedRadio) {
+                selectPaymentMethod(checkedRadio.value);
+            }
+
+            // Simple Card formatting
+            var cardInput = document.getElementById('cardInput');
+            if (cardInput) {
+                cardInput.addEventListener('input', function(e) {
+                    var val = this.value.replace(/\D/g, '').substring(0, 16);
+                    var parts = [];
+                    for (var i = 0; i < val.length; i += 4) {
+                        parts.push(val.substring(i, i + 4));
+                    }
+                    this.value = parts.join(' ');
+                });
+            }
+        });
+    </script>
+}

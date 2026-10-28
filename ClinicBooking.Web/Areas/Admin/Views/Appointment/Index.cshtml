@@ -1,0 +1,85 @@
+@using ClinicBooking.Application.Common.DTOs
+@model IReadOnlyList<AppointmentDto>
+@{
+    ViewData["Title"] = "All Appointments";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="fw-bold text-dark"><i class="fa-solid fa-calendar-check text-primary me-2"></i>All Appointments</h2>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted">
+                    <tr>
+                        <th class="ps-4">Patient</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var a in Model.OrderByDescending(x => x.AppointmentDate).ThenByDescending(x => x.StartTime))
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold text-dark">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-info text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        @a.PatientName
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
+                                            <i class="fa-solid fa-user-md"></i>
+                                        </div>
+                                        <span>Dr. @a.DoctorName</span>
+                                    </div>
+                                </td>
+                                <td>@a.AppointmentDate.ToString("MMM dd, yyyy")</td>
+                                <td class="fw-medium text-primary">@a.StartTime.ToString(@"hh\:mm") – @a.EndTime.ToString(@"hh\:mm")</td>
+                                <td>
+                                    <span class="badge rounded-pill px-3 py-1 @StatusBadge(a.Status)">@a.Status</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        <i class="fa-solid fa-eye me-1"></i> Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <div class="fs-1 text-light mb-3"><i class="fa-solid fa-calendar-xmark"></i></div>
+                                <h5>No Appointments Found</h5>
+                                <p>Appointments booked in the clinic will appear here.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string StatusBadge(ClinicBooking.Domain.Enums.AppointmentStatus s) => s switch
+    {
+        ClinicBooking.Domain.Enums.AppointmentStatus.Pending => "bg-warning text-dark",
+        ClinicBooking.Domain.Enums.AppointmentStatus.Confirmed => "bg-primary text-white",
+        ClinicBooking.Domain.Enums.AppointmentStatus.Completed => "bg-success text-white",
+        ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled => "bg-danger text-white",
+        _ => "bg-secondary text-white"
+    };
+}

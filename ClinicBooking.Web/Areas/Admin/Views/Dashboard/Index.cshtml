@@ -1,0 +1,86 @@
+@model ClinicBooking.Application.DTOs.AdminDashboardDto
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="fw-bold text-dark"><i class="fa-solid fa-chart-pie text-primary me-2"></i>Admin Dashboard</h2>
+    <span class="text-muted"><i class="fa-regular fa-calendar me-1"></i> @DateTime.Now.ToString("dd MMM yyyy")</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Appointments KPI -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 bg-primary text-white position-relative overflow-hidden">
+            <div class="position-absolute end-0 top-0 opacity-25 p-3 fs-1"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="card-body p-4 position-relative z-1">
+                <h6 class="fw-normal mb-1 text-white-50">Today's Appointments</h6>
+                <h1 class="display-5 fw-bold mb-0">@Model.TodaysAppointments</h1>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 bg-success text-white position-relative overflow-hidden">
+            <div class="position-absolute end-0 top-0 opacity-25 p-3 fs-1"><i class="fa-solid fa-check-double"></i></div>
+            <div class="card-body p-4 position-relative z-1">
+                <h6 class="fw-normal mb-1 text-white-50">Completed Appointments</h6>
+                <h1 class="display-5 fw-bold mb-0">@Model.CompletedAppointments</h1>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 bg-danger text-white position-relative overflow-hidden">
+            <div class="position-absolute end-0 top-0 opacity-25 p-3 fs-1"><i class="fa-solid fa-calendar-xmark"></i></div>
+            <div class="card-body p-4 position-relative z-1">
+                <h6 class="fw-normal mb-1 text-white-50">Cancelled Appointments</h6>
+                <h1 class="display-5 fw-bold mb-0">@Model.CancelledAppointments</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users KPI -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4 d-flex align-items-center">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-4" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted fw-bold mb-1">Total Patients</h6>
+                    <h3 class="fw-bold mb-0 text-dark">@Model.TotalPatients</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4 d-flex align-items-center">
+                <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex justify-content-center align-items-center me-4" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                    <i class="fa-solid fa-user-doctor"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted fw-bold mb-1">Total Doctors</h6>
+                    <h3 class="fw-bold mb-0 text-dark">@Model.TotalDoctors</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4 d-flex align-items-center">
+                <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex justify-content-center align-items-center me-4" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                    <i class="fa-solid fa-stethoscope"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted fw-bold mb-1">Active Doctors</h6>
+                    <h3 class="fw-bold mb-0 text-dark">@Model.ActiveDoctors</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

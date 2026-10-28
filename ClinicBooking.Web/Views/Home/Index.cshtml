@@ -1,0 +1,75 @@
+@{
+    ViewData["Title"] = "Welcome";
+}
+
+<!-- Hero Section -->
+<div class="hero-section text-center text-lg-start d-flex align-items-center mt-3">
+    <div class="row w-100 align-items-center">
+        <div class="col-lg-6 ps-lg-5 mb-5 mb-lg-0 text-center text-lg-start">
+            <span class="badge bg-white text-primary border px-3 py-2 rounded-pill mb-3 shadow-sm" style="font-weight: 600;">
+                <i class="fa-solid fa-star text-warning me-1"></i> Top Rated Clinic Management
+            </span>
+            <h1 class="hero-title">
+                Your Health, <br />
+                <span class="text-primary">Our Priority.</span>
+            </h1>
+            <p class="hero-subtitle">
+                Experience hassle-free medical appointments. Find the best doctors, manage your health records, and book your visit in seconds.
+            </p>
+            <div class="d-flex gap-3 justify-content-center justify-content-lg-start">
+                <a asp-area="Patient" asp-controller="Booking" asp-action="SelectDoctor" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">
+                    <i class="fa-solid fa-calendar-check me-2"></i> Book Appointment
+                </a>
+                <a href="#services" class="btn btn-outline-primary bg-white btn-lg rounded-pill px-4">
+                    Learn More
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6 d-none d-lg-block text-center position-relative">
+            <!-- Decorative circle -->
+            <div class="position-absolute bg-primary rounded-circle" style="width: 400px; height: 400px; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; z-index: 0;"></div>
+            
+            <img src="https://images.unsplash.com/photo-1638202993928-7267aad84c31?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                 alt="Doctor caring for patient" 
+                 class="img-fluid rounded-4 shadow-lg position-relative" 
+                 style="object-fit: cover; height: 420px; border: 6px solid white; z-index: 1;">
+            
+            <!-- Floating Card -->
+            <div class="position-absolute bg-white p-3 rounded-4 shadow d-flex align-items-center" style="bottom: 20px; left: 0px; z-index: 2;">
+                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <div class="text-start">
+                    <div class="fw-bold text-dark">50+ Specialists</div>
+                    <div class="small text-muted">Ready to help you</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats / Features Section -->
+<div class="row mt-5 pt-4 text-center" id="services">
+    <div class="col-md-4 mb-4">
+        <div class="p-4 bg-white rounded-4 shadow-sm h-100 feature-card">
+            <div class="fs-1 text-primary mb-3"><i class="fa-solid fa-user-doctor"></i></div>
+            <h4 class="fw-bold">Expert Doctors</h4>
+            <p class="text-muted">Choose from our wide range of highly qualified and experienced specialists in various fields.</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="p-4 bg-white rounded-4 shadow-sm h-100 feature-card">
+            <div class="fs-1 text-primary mb-3"><i class="fa-solid fa-clock"></i></div>
+            <h4 class="fw-bold">24/7 Booking</h4>
+            <p class="text-muted">Book your appointments anywhere, anytime, with our real-time schedule updates.</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="p-4 bg-white rounded-4 shadow-sm h-100 feature-card">
+            <div class="fs-1 text-primary mb-3"><i class="fa-solid fa-file-medical"></i></div>
+            <h4 class="fw-bold">Digital Records</h4>
+            <p class="text-muted">Access your prescriptions and medical history securely directly from your dashboard.</p>
+        </div>
+    </div>
+</div>
+

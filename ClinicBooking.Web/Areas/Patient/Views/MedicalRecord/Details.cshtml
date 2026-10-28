@@ -1,0 +1,126 @@
+@model ClinicBooking.Domain.Entities.MedicalRecord
+@{
+    ViewData["Title"] = "Medical Record Details";
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-9">
+        <div class="d-flex align-items-center mb-4">
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-circle me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0">Medical Record Details</h3>
+                <span class="text-muted small">Record Date: @Model.RecordDate.ToString("MMMM dd, yyyy")</span>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-notes-medical text-primary me-2"></i>Consultation Summary</h5>
+                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Completed</span>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold text-uppercase d-block mb-1">Attending Doctor</label>
+                        <h5 class="fw-bold text-dark">Dr. @(Model.Doctor?.FullName ?? $"Doctor #{Model.DoctorId}")</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold text-uppercase d-block mb-1">Consultation Date</label>
+                        <h5 class="fw-bold text-dark">@Model.RecordDate.ToString("MMM dd, yyyy")</h5>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Symptoms Reported</label>
+                    <div class="p-3 bg-light rounded-3 text-dark">
+                        @(string.IsNullOrWhiteSpace(Model.Symptoms) ? "None documented" : Model.Symptoms)
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Diagnosis</label>
+                    <div class="p-3 bg-light rounded-3 text-dark fw-medium">
+                        @(string.IsNullOrWhiteSpace(Model.Diagnosis) ? "None documented" : Model.Diagnosis)
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted small fw-bold text-uppercase d-block mb-1">Treatment Plan & Advice</label>
+                    <div class="p-3 bg-light rounded-3 text-dark">
+                        @(string.IsNullOrWhiteSpace(Model.TreatmentPlan) ? "None documented" : Model.TreatmentPlan)
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                {
+                    <div class="mb-4">
+                        <label class="text-muted small fw-bold text-uppercase d-block mb-1">Doctor's Notes</label>
+                        <div class="p-3 bg-light rounded-3 text-dark">
+                            @Model.Notes
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model.Prescriptions != null && Model.Prescriptions.Any())
+        {
+            @foreach (var prescription in Model.Prescriptions)
+            {
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-pills text-danger me-2"></i>Prescribed Medications</h5>
+                        @if (!string.IsNullOrWhiteSpace(prescription.Notes))
+                        {
+                            <small class="text-muted">@prescription.Notes</small>
+                        }
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light text-muted">
+                                    <tr>
+                                        <th class="ps-4">Medicine</th>
+                                        <th>Dosage</th>
+                                        <th>Frequency</th>
+                                        <th>Duration</th>
+                                        <th class="pe-4">Instructions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (prescription.Items != null && prescription.Items.Any())
+                                    {
+                                        @foreach (var item in prescription.Items)
+                                        {
+                                            <tr>
+                                                <td class="ps-4 fw-bold text-dark">@item.MedicineName</td>
+                                                <td>@item.Dosage</td>
+                                                <td>@item.Frequency</td>
+                                                <td>@item.Duration</td>
+                                                <td class="pe-4 text-muted">@(string.IsNullOrWhiteSpace(item.Instructions) ? "As directed" : item.Instructions)</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5" class="text-center py-3 text-muted">No medicines listed in this prescription.</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        <div class="mb-5">
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Medical Records
+            </a>
+        </div>
+    </div>
+</div>

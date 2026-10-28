@@ -1,0 +1,67 @@
+@using ClinicBooking.Application.Common.DTOs
+@model IReadOnlyList<MedicalRecordDto>
+@{
+    ViewData["Title"] = "My Medical Records";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="fw-bold text-dark"><i class="fa-solid fa-file-medical text-primary me-2"></i>My Medical Records</h2>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted">
+                    <tr>
+                        <th class="ps-4">Date</th>
+                        <th>Doctor</th>
+                        <th>Diagnosis</th>
+                        <th>Treatment Plan</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var record in Model.OrderByDescending(r => r.RecordDate))
+                        {
+                            <tr>
+                                <td class="ps-4 fw-medium text-dark">@record.RecordDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                            <i class="fa-solid fa-user-doctor"></i>
+                                        </div>
+                                        <span>Dr. @record.DoctorName</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+                                        @(string.IsNullOrWhiteSpace(record.Diagnosis) ? "General Consultation" : record.Diagnosis)
+                                    </span>
+                                </td>
+                                <td><span class="text-truncate d-inline-block text-muted" style="max-width: 250px;">@(string.IsNullOrWhiteSpace(record.TreatmentPlan) ? "—" : record.TreatmentPlan)</span></td>
+                                <td class="text-end pe-4">
+                                    <a asp-action="Details" asp-route-id="@record.Id" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        <i class="fa-solid fa-eye me-1"></i> View Record
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <div class="fs-1 text-light mb-3"><i class="fa-solid fa-folder-open"></i></div>
+                                <h5>No Medical Records Found</h5>
+                                <p>You have no clinical records on file yet.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

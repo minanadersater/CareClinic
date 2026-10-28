@@ -1,0 +1,71 @@
+@using ClinicBooking.Application.Common.DTOs
+@model IReadOnlyList<MedicalRecordDto>
+@{
+    ViewData["Title"] = "Medical Records";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="fw-bold text-dark"><i class="fa-solid fa-file-medical text-primary me-2"></i>Medical Records</h2>
+</div>
+
+@if (TempData["SuccessMessage"] is not null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+        <i class="fa-solid fa-circle-check me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted">
+                    <tr>
+                        <th class="ps-4">Patient</th>
+                        <th>Date</th>
+                        <th>Diagnosis</th>
+                        <th>Notes</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var r in Model.OrderByDescending(x => x.RecordDate))
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold text-dark">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        @r.PatientName
+                                    </div>
+                                </td>
+                                <td>@r.RecordDate.ToString("MMM dd, yyyy")</td>
+                                <td><span class="badge bg-light text-dark border">@r.Diagnosis</span></td>
+                                <td class="text-muted"><span class="text-truncate d-inline-block" style="max-width: 250px;">@r.Notes</span></td>
+                                <td class="text-end pe-4">
+                                    <a asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        <i class="fa-solid fa-eye me-1"></i> View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <div class="fs-1 text-light mb-3"><i class="fa-solid fa-folder-open"></i></div>
+                                <h5>No Medical Records Found</h5>
+                                <p>Medical records you create for completed appointments will appear here.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

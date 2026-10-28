@@ -1,0 +1,158 @@
+@model ClinicBooking.Application.Common.DTOs.AppointmentDto
+@{
+    ViewData["Title"] = "Appointment Details";
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-circle me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0">My Appointment Details</h3>
+                <span class="text-muted small">Appointment #@Model.Id</span>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div>
+                        <span class="text-muted small d-block">Status</span>
+                        <span class="badge fs-6 rounded-pill px-3 py-2 @StatusBadgeClass(Model.Status)">
+                            @Model.Status
+                        </span>
+                    </div>
+                    <div class="text-end">
+                        <span class="text-muted small d-block">Appointment Date</span>
+                        <h5 class="fw-bold text-dark mb-0">@Model.AppointmentDate.ToString("dddd, MMMM dd, yyyy")</h5>
+                        <span class="text-primary fw-medium">
+                            <i class="fa-regular fa-clock me-1"></i>@Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm")
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="p-3 bg-light rounded-3">
+                        <label class="text-muted small fw-bold text-uppercase d-block mb-1">Doctor</label>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 45px; height: 45px;">
+                                <i class="fa-solid fa-user-md fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">Dr. @Model.DoctorName</h5>
+                                <span class="text-muted small">Specialist Consultation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted small fw-bold text-uppercase">My Notes</label>
+                    <div class="p-3 bg-light rounded-3 text-dark">
+                        @(string.IsNullOrWhiteSpace(Model.PatientNotes) ? "No notes provided for this appointment." : Model.PatientNotes)
+                    </div>
+                </div>
+
+                <!-- Payment Summary Card -->
+                <div class="card border-0 bg-light rounded-4 p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-credit-card text-primary me-2"></i>معلومات الدفع والفاتورة</h6>
+                        @if (Model.PaymentStatus == ClinicBooking.Domain.Enums.PaymentStatus.Paid)
+                        {
+                            <span class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-circle-check me-1"></i>مدفوع بالكامل</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2"><i class="fa-solid fa-clock me-1"></i>قيد الدفع في العيادة</span>
+                        }
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">طريقة الدفع</span>
+                            <span class="fw-bold text-dark">
+                                @(Model.PaymentMethod == ClinicBooking.Domain.Enums.PaymentMethod.Cash ? "نقداً بالعيادة (Cash)" :
+                                  Model.PaymentMethod == ClinicBooking.Domain.Enums.PaymentMethod.CreditCard ? "بطاقة بنكية (Visa / Master)" :
+                                  Model.PaymentMethod == ClinicBooking.Domain.Enums.PaymentMethod.MobileWallet ? "محفظة كاش إلكترونية" :
+                                  Model.PaymentMethod == ClinicBooking.Domain.Enums.PaymentMethod.InstaPay ? "إنستاباي (InstaPay)" : "دفع إلكتروني")
+                            </span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">المبلغ الإجمالي</span>
+                            <span class="fw-bold text-success fs-5">@(Model.PaymentAmount?.ToString("N2") ?? "—") @Model.PaymentCurrency</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.TransactionId))
+                        {
+                            <div class="col-sm-6">
+                                <span class="text-muted small d-block">رقم المعاملة / الإيصال</span>
+                                <code class="text-primary fw-medium">@Model.TransactionId</code>
+                            </div>
+                        }
+                        @if (Model.PaidAt.HasValue)
+                        {
+                            <div class="col-sm-6">
+                                <span class="text-muted small d-block">تاريخ وساعة الدفع</span>
+                                <span class="small text-muted">@Model.PaidAt.Value.ToString("dd MMM yyyy - hh:mm tt")</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.PaymentNotes))
+                        {
+                            <div class="col-12">
+                                <span class="text-muted small d-block">تفاصيل المعاملة</span>
+                                <span class="small text-muted">@Model.PaymentNotes</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (Model.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled)
+                {
+                    <div class="alert alert-danger rounded-3 mb-4">
+                        <h6 class="fw-bold mb-1"><i class="fa-solid fa-ban me-1"></i> Appointment Cancelled</h6>
+                        <p class="mb-0 small"><strong>Reason:</strong> @(string.IsNullOrWhiteSpace(Model.CancellationReason) ? "No reason specified" : Model.CancellationReason)</p>
+                        @if (Model.CancelledAt.HasValue)
+                        {
+                            <p class="mb-0 small text-muted">Cancelled on: @Model.CancelledAt.Value.ToString("MMM dd, yyyy HH:mm")</p>
+                        }
+                    </div>
+                }
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back to Appointments
+                    </a>
+
+                    @if (Model.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Completed)
+                    {
+                        <a asp-area="Patient" asp-controller="MedicalRecord" asp-action="Index" class="btn btn-primary rounded-pill px-4">
+                            <i class="fa-solid fa-file-medical me-1"></i> View Medical Records
+                        </a>
+                    }
+                    @if (Model.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled && Model.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Completed)
+                    {
+                        <form asp-action="Cancel" method="post" class="d-inline">
+                            <input type="hidden" name="AppointmentId" value="@Model.Id" />
+                            <input type="hidden" name="CancellationReason" value="Cancelled by patient" />
+                            <button type="submit" class="btn btn-outline-danger rounded-pill px-4"
+                                    onclick="return confirm('Are you sure you want to cancel this appointment?')">
+                                <i class="fa-solid fa-xmark me-1"></i> Cancel Appointment
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string StatusBadgeClass(ClinicBooking.Domain.Enums.AppointmentStatus s) => s switch
+    {
+        ClinicBooking.Domain.Enums.AppointmentStatus.Pending => "bg-warning text-dark",
+        ClinicBooking.Domain.Enums.AppointmentStatus.Confirmed => "bg-primary text-white",
+        ClinicBooking.Domain.Enums.AppointmentStatus.Completed => "bg-success text-white",
+        ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled => "bg-danger text-white",
+        _ => "bg-secondary text-white"
+    };
+}

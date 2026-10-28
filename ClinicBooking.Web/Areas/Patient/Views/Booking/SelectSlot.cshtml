@@ -1,0 +1,75 @@
+@{
+    ViewData["Title"] = "Select Time Slot";
+    var doctorId = ViewBag.DoctorId;
+    var doctorName = ViewBag.DoctorName;
+    var fee = ViewBag.ConsultationFee;
+    DateTime selectedDate = ViewBag.SelectedDate;
+    IEnumerable<TimeSpan> slots = ViewBag.Slots;
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a asp-action="SelectDoctor" class="btn btn-outline-secondary rounded-circle me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0">Book Appointment</h3>
+                <span class="text-muted small">with Dr. @doctorName</span>
+            </div>
+        </div>
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>@TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <form asp-action="SelectSlot" method="get" class="d-flex align-items-end gap-3">
+                    <input type="hidden" name="doctorId" value="@doctorId" />
+                    <div class="flex-grow-1">
+                        <label class="form-label fw-bold text-dark">Select Date</label>
+                        <input type="date" name="date" class="form-control rounded-3 bg-light border-0 py-2" value="@selectedDate.ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3"><i class="fa-regular fa-clock text-primary me-2"></i>Available Slots on @selectedDate.ToString("MMM dd, yyyy")</h5>
+                
+                @if (slots != null && slots.Any())
+                {
+                    <div class="row g-3 mt-2">
+                        @foreach (var slot in slots)
+                        {
+                            <div class="col-6 col-sm-4 col-md-3">
+                                <a asp-action="Checkout" 
+                                   asp-route-doctorId="@doctorId" 
+                                   asp-route-date="@selectedDate.ToString("yyyy-MM-dd")" 
+                                   asp-route-startTime="@slot" 
+                                   class="btn btn-outline-primary w-100 rounded-3 py-2 fw-medium text-center d-block">
+                                    <i class="fa-regular fa-clock me-1"></i> @DateTime.Today.Add(slot).ToString("hh:mm tt")
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 bg-light rounded-3 mt-3">
+                        <div class="fs-1 text-muted mb-2"><i class="fa-solid fa-calendar-xmark"></i></div>
+                        <h6 class="text-muted mb-0">No available slots for this date.</h6>
+                        <p class="small text-muted mt-1">Please try selecting a different date.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+

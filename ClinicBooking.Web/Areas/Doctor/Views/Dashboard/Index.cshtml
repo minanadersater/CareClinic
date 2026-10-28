@@ -1,0 +1,77 @@
+@using ClinicBooking.Application.Common.DTOs
+@model IReadOnlyList<AppointmentDto>
+@{
+    ViewData["Title"] = "Doctor Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="mb-4">Welcome, Dr. @ViewBag.Doctor?.FullName</h2>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-white bg-primary">
+            <div class="card-body">
+                <h6>Total Appointments</h6>
+                <h3>@ViewBag.TotalAppointments</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-white bg-warning">
+            <div class="card-body">
+                <h6>Pending</h6>
+                <h3>@ViewBag.PendingAppointments</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-white bg-success">
+            <div class="card-body">
+                <h6>Today</h6>
+                <h3>@ViewBag.TodayAppointments</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h5>Upcoming Appointments</h5>
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr><th>Patient</th><th>Date</th><th>Time</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td>@a.PatientName</td>
+                    <td>@a.AppointmentDate.ToString("yyyy-MM-dd")</td>
+                    <td>@a.StartTime.ToString(@"hh\:mm")</td>
+                    <td>
+                        <span class="badge @(a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Pending ? "bg-warning text-dark" :
+                                             a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Confirmed ? "bg-primary text-white" :
+                                             a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Completed ? "bg-success text-white" : "bg-danger text-white")">
+                            @a.Status
+                        </span>
+                    </td>
+                    <td>
+                        <a asp-area="Doctor" asp-controller="Appointment" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="row g-3 mt-2">
+    <div class="col-md-4">
+        <a asp-area="Doctor" asp-controller="Appointment" asp-action="Index" class="btn btn-outline-primary w-100 py-3">📅 My Appointments</a>
+    </div>
+    <div class="col-md-4">
+        <a asp-area="Doctor" asp-controller="Schedule" asp-action="Index" class="btn btn-outline-info w-100 py-3">🕐 My Schedule</a>
+    </div>
+    <div class="col-md-4">
+        <a asp-area="Doctor" asp-controller="MedicalRecord" asp-action="Index" class="btn btn-outline-success w-100 py-3">📋 Medical Records</a>
+    </div>
+</div>
+

@@ -1,0 +1,102 @@
+@model ClinicBooking.Web.ViewModels.Doctor.ManageScheduleViewModel
+@{
+    ViewData["Title"] = "My Schedule";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="fw-bold text-dark"><i class="fa-solid fa-clock text-primary me-2"></i>Manage My Schedule</h2>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+        <i class="fa-solid fa-circle-check me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger rounded-3">
+        <div asp-validation-summary="All" class="mb-0 fw-medium"></div>
+    </div>
+}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        <div class="alert alert-info rounded-3 mb-4">
+            <i class="fa-solid fa-circle-info me-2"></i> Define your working hours below. Patients will only be able to book appointments within the time slots generated from this schedule.
+        </div>
+        
+        <form asp-action="Index" method="post">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border-top border-bottom">
+                    <thead class="bg-light text-muted">
+                        <tr>
+                            <th style="width: 20%" class="ps-3">Day of Week</th>
+                            <th style="width: 15%" class="text-center">Working?</th>
+                            <th style="width: 25%">Start Time</th>
+                            <th style="width: 25%">End Time</th>
+                            <th style="width: 15%" class="pe-3">Slot (Mins)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Schedules.Count; i++)
+                        {
+                            <tr>
+                                <td class="fw-bold text-dark ps-3">
+                                    <input type="hidden" asp-for="Schedules[i].DayOfWeek" />
+                                    @Model.Schedules[i].DayOfWeek
+                                </td>
+                                <td class="text-center">
+                                    <div class="form-check form-switch d-flex justify-content-center">
+                                        <input class="form-check-input work-day-toggle" type="checkbox" role="switch" asp-for="Schedules[i].IsWorkingDay" data-index="@i" style="width: 2.5rem; height: 1.2rem;">
+                                    </div>
+                                </td>
+                                <td>
+                                    <input type="time" asp-for="Schedules[i].StartTime" class="form-control rounded-3 bg-light border-0 time-input-@i" disabled="@(!Model.Schedules[i].IsWorkingDay)" />
+                                </td>
+                                <td>
+                                    <input type="time" asp-for="Schedules[i].EndTime" class="form-control rounded-3 bg-light border-0 time-input-@i" disabled="@(!Model.Schedules[i].IsWorkingDay)" />
+                                </td>
+                                <td class="pe-3">
+                                    <input type="number" asp-for="Schedules[i].SlotDurationMinutes" class="form-control rounded-3 bg-light border-0 time-input-@i" min="10" max="120" step="5" disabled="@(!Model.Schedules[i].IsWorkingDay)" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="text-end mt-4">
+                <button type="submit" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-sm">
+                    <i class="fa-solid fa-save me-2"></i> Save Schedule
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // JavaScript to toggle inputs dynamically based on the switch
+        document.querySelectorAll('.work-day-toggle').forEach(function(toggle) {
+            toggle.addEventListener('change', function() {
+                var index = this.getAttribute('data-index');
+                var inputs = document.querySelectorAll('.time-input-' + index);
+                inputs.forEach(function(input) {
+                    input.disabled = !toggle.checked;
+                    if (toggle.checked && !input.value) {
+                        // Set defaults if checked and empty
+                        if (input.type === 'time') {
+                            if (input.name.includes("StartTime")) input.value = "09:00";
+                            if (input.name.includes("EndTime")) input.value = "17:00";
+                        } else if (input.type === 'number') {
+                            input.value = "30";
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}
+
