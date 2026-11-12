@@ -24,5 +24,8 @@ public class DoctorSpecialtyConfiguration : IEntityTypeConfiguration<DoctorSpeci
 
         // section 23: index on DoctorSpecialties.SpecialtyId
         builder.HasIndex(ds => ds.SpecialtyId);
+
+        // Matching query filter for the soft-deleted Doctor principal.
+        builder.HasQueryFilter(ds => !ds.Doctor.IsDeleted);
     }
 }

@@ -27,27 +27,4 @@ public class CheckoutViewModel
     [Display(Name = "طريقة الدفع")]
     public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
 
-    // Card Details
-    [Display(Name = "رقم البطاقة البنكية")]
-    public string? CardNumber { get; set; }
-
-    [Display(Name = "اسم حامل البطاقة")]
-    public string? CardHolderName { get; set; }
-
-    [Display(Name = "شهر الانتهاء")]
-    public string? ExpiryMonth { get; set; }
-
-    [Display(Name = "سنة الانتهاء")]
-    public string? ExpiryYear { get; set; }
-
-    [Display(Name = "رمز الأمان CVV")]
-    public string? CVV { get; set; }
-
-    // Mobile Wallet
-    [Display(Name = "رقم المحفظة الإلكترونية (فودافون كاش / أورنج / اتصالات / وي)")]
-    public string? WalletNumber { get; set; }
-
-    // InstaPay
-    [Display(Name = "عنوان الدفع اللحظي IPA أو رقم الهاتف على إنستاباي")]
-    public string? InstaPayHandle { get; set; }
 }

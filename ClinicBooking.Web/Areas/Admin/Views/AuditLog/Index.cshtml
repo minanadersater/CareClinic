@@ -1,0 +1,70 @@
+@model IReadOnlyList<ClinicBooking.Application.Common.DTOs.AuditLogDto>
+@{
+    ViewData["Title"] = "Audit Log";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="fw-bold text-dark"><i class="fa-solid fa-clipboard-list text-primary me-2"></i>Audit Log</h2>
+    <span class="text-muted"><i class="fa-solid fa-shield-halved me-1"></i> Latest @Model.Count entries</span>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted">
+                    <tr>
+                        <th class="ps-4">When</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Entity</th>
+                        <th>Details</th>
+                        <th class="text-end pe-4">IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var log in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 text-nowrap">@log.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>@(string.IsNullOrWhiteSpace(log.UserName) ? (log.UserId ?? "system") : log.UserName)</td>
+                                <td><span class="badge rounded-pill px-3 py-1 @ActionBadge(log.Action)">@log.Action</span></td>
+                                <td class="fw-medium text-dark">
+                                    @log.EntityName
+                                    @if (!string.IsNullOrWhiteSpace(log.EntityId))
+                                    {
+                                        <span class="text-muted">#@log.EntityId</span>
+                                    }
+                                </td>
+                                <td><span class="text-truncate d-inline-block" style="max-width: 320px;">@log.Details</span></td>
+                                <td class="text-end pe-4 text-muted">@log.IpAddress</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <div class="fs-1 text-light mb-3"><i class="fa-solid fa-clipboard-list"></i></div>
+                                <h5>No Audit Entries Yet</h5>
+                                <p>Administrative and data-changing actions will be recorded here.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string ActionBadge(string action) => action switch
+    {
+        "Created" => "bg-success bg-opacity-10 text-success",
+        "Updated" => "bg-warning bg-opacity-10 text-warning",
+        "Deleted" => "bg-danger bg-opacity-10 text-danger",
+        _ => "bg-secondary bg-opacity-10 text-secondary"
+    };
+}

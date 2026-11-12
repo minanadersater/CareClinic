@@ -1,6 +1,10 @@
 @model ClinicBooking.Application.Common.DTOs.AppointmentDto
 @{
     ViewData["Title"] = "Appointment Details";
+    int cutoff = ViewBag.CancellationCutoffHours ?? 2;
+    bool isOpen = Model.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled
+               && Model.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Completed;
+    bool canChange = isOpen && AppointmentPolicy.IsWithinChangeWindow(Model.AppointmentDate, Model.StartTime, DateTime.Now, cutoff);
 }
 
 <div class="row justify-content-center mt-3">
@@ -14,6 +18,14 @@
                 <span class="text-muted small">Appointment #@Model.Id</span>
             </div>
         </div>
+
+        @if (TempData["Error"] is not null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
 
         <div class="card border-0 shadow-sm rounded-4 mb-4">
             <div class="card-body p-4 p-md-5">
@@ -129,16 +141,28 @@
                             <i class="fa-solid fa-file-medical me-1"></i> View Medical Records
                         </a>
                     }
-                    @if (Model.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled && Model.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Completed)
+                    @if (canChange)
                     {
-                        <form asp-action="Cancel" method="post" class="d-inline">
-                            <input type="hidden" name="AppointmentId" value="@Model.Id" />
-                            <input type="hidden" name="CancellationReason" value="Cancelled by patient" />
-                            <button type="submit" class="btn btn-outline-danger rounded-pill px-4"
-                                    onclick="return confirm('Are you sure you want to cancel this appointment?')">
-                                <i class="fa-solid fa-xmark me-1"></i> Cancel Appointment
-                            </button>
-                        </form>
+                        <div class="d-flex gap-2">
+                            <a asp-action="Reschedule" asp-route-id="@Model.Id" class="btn btn-outline-primary rounded-pill px-4">
+                                <i class="fa-solid fa-calendar-day me-1"></i> Reschedule
+                            </a>
+                            <form asp-action="Cancel" method="post" class="d-inline">
+                                <input type="hidden" name="AppointmentId" value="@Model.Id" />
+                                <input type="hidden" name="CancellationReason" value="Cancelled by patient" />
+                                <button type="submit" class="btn btn-outline-danger rounded-pill px-4"
+                                        onclick="return confirm('Are you sure you want to cancel this appointment?')">
+                                    <i class="fa-solid fa-xmark me-1"></i> Cancel Appointment
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    else if (isOpen)
+                    {
+                        <span class="text-muted small text-end">
+                            <i class="fa-solid fa-lock me-1"></i>
+                            Online changes close @cutoff hour(s) before the appointment. Please contact the clinic.
+                        </span>
                     }
                 </div>
             </div>

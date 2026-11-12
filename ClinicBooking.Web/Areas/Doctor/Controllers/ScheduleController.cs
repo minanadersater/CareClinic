@@ -28,7 +28,10 @@ public class ScheduleController : Controller
 
         var existingSchedules = await _scheduleService.GetDoctorSchedulesAsync(doctor.Id);
         
-        var model = new ManageScheduleViewModel();
+        var model = new ManageScheduleViewModel
+        {
+            AppointmentDurationMinutes = doctor.AppointmentDurationMinutes
+        };
         
         // Initialize 7 days of the week
         foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
@@ -42,7 +45,6 @@ public class ScheduleController : Controller
                     IsWorkingDay = true,
                     StartTime = existing.StartTime,
                     EndTime = existing.EndTime,
-                    SlotDurationMinutes = doctor.AppointmentDurationMinutes
                 });
             }
             else
@@ -51,7 +53,6 @@ public class ScheduleController : Controller
                 {
                     DayOfWeek = day,
                     IsWorkingDay = false,
-                    SlotDurationMinutes = 30
                 });
             }
         }
@@ -93,10 +94,9 @@ public class ScheduleController : Controller
 
         await _scheduleService.UpdateDoctorScheduleAsync(doctor.Id, schedulesToSave);
 
-        var activeSlot = model.Schedules.FirstOrDefault(s => s.IsWorkingDay && s.SlotDurationMinutes >= 10 && s.SlotDurationMinutes <= 120);
-        if (activeSlot != null && activeSlot.SlotDurationMinutes != doctor.AppointmentDurationMinutes)
+        if (model.AppointmentDurationMinutes != doctor.AppointmentDurationMinutes)
         {
-            doctor.AppointmentDurationMinutes = activeSlot.SlotDurationMinutes;
+            doctor.AppointmentDurationMinutes = model.AppointmentDurationMinutes;
             await _doctorService.UpdateProfileAsync(doctor);
         }
 

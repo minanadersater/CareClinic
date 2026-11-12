@@ -51,5 +51,9 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
             .WithOne(r => r.Appointment)
             .HasForeignKey<Review>(r => r.AppointmentId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Matching query filter so a soft-deleted Doctor/Patient also hides their
+        // appointments (avoids the "required end has a query filter" warning).
+        builder.HasQueryFilter(a => !a.IsDeleted && !a.Doctor.IsDeleted && !a.Patient.IsDeleted);
     }
 }

@@ -26,5 +26,8 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.Property(r => r.Comment).HasMaxLength(1000);
 
         builder.ToTable(t => t.HasCheckConstraint("CK_Review_Rating", "[Rating] >= 1 AND [Rating] <= 5"));
+
+        // Matching query filter for the soft-deleted Doctor/Patient principals.
+        builder.HasQueryFilter(r => !r.IsDeleted && !r.Doctor.IsDeleted && !r.Patient.IsDeleted);
     }
 }

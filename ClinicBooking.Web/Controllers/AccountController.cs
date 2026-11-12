@@ -1,9 +1,12 @@
+using ClinicBooking.Application.Common.Interfaces;
 using ClinicBooking.Domain.Entities;
 using ClinicBooking.Infrastructure.Data;
 using ClinicBooking.Infrastructure.Identity;
 using ClinicBooking.Web.ViewModels.Account;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
 
 namespace ClinicBooking.Web.Controllers;
 
@@ -13,17 +16,20 @@ public class AccountController : Controller
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ApplicationDbContext _db;
     private readonly ILogger<AccountController> _logger;
+    private readonly IEmailSender _emailSender;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         ApplicationDbContext db,
-        ILogger<AccountController> logger)
+        ILogger<AccountController> logger,
+        IEmailSender emailSender)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _db = db;
         _logger = logger;
+        _emailSender = emailSender;
     }
 
     [HttpGet]
@@ -159,6 +165,118 @@ public class AccountController : Controller
     {
         await _signInManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
+    }
+
+    // ---- Password reset (forgot password) ----
+
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+        return View(new ForgotPasswordViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+
+        // Never reveal whether an account exists for the supplied address.
+        if (user is not null && user.IsActive)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            var callbackUrl = Url.Action(
+                nameof(ResetPassword),
+                "Account",
+                new { email = user.Email, token = encodedToken },
+                Request.Scheme);
+
+            try
+            {
+                await _emailSender.SendAsync(
+                    user.Email!,
+                    "Reset your CareClinic password",
+                    $"<p>Hello {user.FullName},</p>" +
+                    $"<p>You requested a password reset. Click the link below to choose a new password:</p>" +
+                    $"<p><a href=\"{callbackUrl}\">Reset my password</a></p>" +
+                    $"<p>If you did not request this, you can safely ignore this email.</p>");
+            }
+            catch (Exception ex)
+            {
+                // A mail failure must not disclose account existence to the caller.
+                _logger.LogError(ex, "Failed to send password reset email for {Email}.", user.Email);
+            }
+        }
+
+        TempData["ResetEmailSent"] = true;
+        return RedirectToAction(nameof(ForgotPassword));
+    }
+
+    [HttpGet]
+    public IActionResult ResetPassword(string? email, string? token)
+    {
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+        {
+            return BadRequest("A valid password reset request is required.");
+        }
+
+        return View(new ResetPasswordViewModel { Email = email, Token = token });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+
+        string token;
+        try
+        {
+            token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
+        }
+        catch (FormatException)
+        {
+            ModelState.AddModelError(string.Empty, "This password reset link is not valid. Please request a new one.");
+            return View(model);
+        }
+
+        if (user is null)
+        {
+            // Same response as success, to avoid account enumeration.
+            TempData["PasswordReset"] = true;
+            return RedirectToAction(nameof(Login));
+        }
+
+        var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+
+        if (result.Succeeded)
+        {
+            TempData["PasswordReset"] = true;
+            return RedirectToAction(nameof(Login));
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+
+        return View(model);
     }
 
     [HttpGet]

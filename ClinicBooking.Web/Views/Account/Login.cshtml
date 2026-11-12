@@ -15,6 +15,14 @@
                 <form asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small fw-medium"></div>
 
+                    @if (TempData["PasswordReset"] != null)
+                    {
+                        <div class="alert alert-success rounded-3 small" role="alert">
+                            <i class="fa-solid fa-circle-check me-2"></i>
+                            Your password has been reset. Please sign in with your new password.
+                        </div>
+                    }
+
                     <div class="form-floating mb-3">
                         <input asp-for="Email" class="form-control rounded-3 bg-light border-0" placeholder="name@example.com" />
                         <label asp-for="Email"><i class="fa-regular fa-envelope me-2 text-muted"></i>Email address</label>
@@ -32,7 +40,7 @@
                             <input asp-for="RememberMe" class="form-check-input shadow-none" />
                             <label asp-for="RememberMe" class="form-check-label text-muted small">Remember me</label>
                         </div>
-                        <a href="#" class="small text-decoration-none text-primary fw-medium">Forgot Password?</a>
+                        <a asp-action="ForgotPassword" class="small text-primary fw-medium text-decoration-none">Forgot password?</a>
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold fs-5 shadow-sm">

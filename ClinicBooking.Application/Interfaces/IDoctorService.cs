@@ -13,6 +13,12 @@ public interface IDoctorService
     Task<DoctorDto?> GetDoctorByIdAsync(int id, CancellationToken ct = default);
     Task<IReadOnlyList<DoctorDto>> GetAllDoctorsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<DoctorDto>> GetDoctorsBySpecialtyAsync(int specialtyId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns the active doctors matching the supplied search criteria, ordered
+    /// as requested. An empty filter returns every active doctor.
+    /// </summary>
+    Task<IReadOnlyList<DoctorDto>> SearchActiveDoctorsAsync(DoctorSearchFilter filter, CancellationToken ct = default);
     Task<Doctor> CreateDoctorAsync(CreateDoctorDto dto);
     Task UpdateDoctorAsync(UpdateDoctorDto dto, CancellationToken ct = default);
     Task UpdateProfileAsync(Doctor doctor);

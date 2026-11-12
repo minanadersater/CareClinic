@@ -45,6 +45,25 @@
                                 <span class="text-muted small">Patient ID: #@Model.PatientId</span>
                             </div>
                         </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.PatientPhone) || !string.IsNullOrWhiteSpace(Model.PatientEmail))
+                        {
+                            <div class="d-flex flex-wrap gap-3 mt-3 pt-3 border-top">
+                                @if (!string.IsNullOrWhiteSpace(Model.PatientPhone))
+                                {
+                                    <span class="text-dark small">
+                                        <i class="fa-solid fa-phone text-primary me-1"></i>
+                                        <a href="tel:@Model.PatientPhone" class="text-decoration-none text-dark">@Model.PatientPhone</a>
+                                    </span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Model.PatientEmail))
+                                {
+                                    <span class="text-dark small">
+                                        <i class="fa-solid fa-envelope text-primary me-1"></i>
+                                        <a href="mailto:@Model.PatientEmail" class="text-decoration-none text-dark">@Model.PatientEmail</a>
+                                    </span>
+                                }
+                            </div>
+                        }
                     </div>
                 </div>
 
@@ -83,7 +102,7 @@
                             <span class="fw-bold text-success fs-5">@(Model.PaymentAmount?.ToString("N2") ?? "—") @Model.PaymentCurrency</span>
                         </div>
                         <div class="col-sm-4 text-sm-end">
-                            @if (Model.PaymentStatus != ClinicBooking.Domain.Enums.PaymentStatus.Paid && Model.PaymentId.HasValue && Model.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled)
+                            @if (Model.PaymentMethod == ClinicBooking.Domain.Enums.PaymentMethod.Cash && Model.PaymentStatus == ClinicBooking.Domain.Enums.PaymentStatus.Pending && Model.PaymentId.HasValue && Model.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled)
                             {
                                 <form asp-action="MarkPaymentPaid" method="post" class="d-inline">
                                     <input type="hidden" name="appointmentId" value="@Model.Id" />

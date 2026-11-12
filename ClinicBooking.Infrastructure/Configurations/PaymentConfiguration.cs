@@ -34,5 +34,11 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .IsUnique();
 
         builder.HasIndex(p => p.TransactionId);
+
+        // Matching query filter for the soft-deleted Appointment chain.
+        builder.HasQueryFilter(p => !p.IsDeleted
+            && !p.Appointment.IsDeleted
+            && !p.Appointment.Doctor.IsDeleted
+            && !p.Appointment.Patient.IsDeleted);
     }
 }

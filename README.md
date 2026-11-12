@@ -1,94 +1,130 @@
 # Clinic Booking & Management System
 
-ASP.NET Core MVC clinic appointment platform. See the original spec for full
-functional/business requirements. This scaffold covers **Phase 1 (Foundation)**
-and **Phase 2 (Identity)**.
+An ASP.NET Core MVC application for clinic appointment booking and day-to-day clinic management. The solution uses a layered architecture with Domain, Application, Infrastructure, and Web projects.
 
-## What's implemented so far
+## Current features
 
-- **Solution structure**: `ClinicBooking.Domain` → `ClinicBooking.Application` →
-  `ClinicBooking.Infrastructure` → `ClinicBooking.Web`, with the dependency
-  direction enforced (Domain has zero project/package dependencies).
-- **Domain entities**: Doctor, Patient, Specialty, DoctorSpecialty,
-  DoctorSchedule, Appointment, MedicalRecord, Prescription, PrescriptionItem,
-  Review, Notification, AuditLog.
-- **EF Core + SQL Server**: `ApplicationDbContext` (extends `IdentityDbContext`),
-  Fluent API configurations for every entity, including:
-  - A **unique filtered index** on `(DoctorId, AppointmentDate, StartTime)` that
-    excludes cancelled appointments — this is the database-level double-booking
-    guard called out in the spec's concurrency rule.
-  - A `rowversion` concurrency token on `Appointment`.
-  - Unique index on `Specialty.Name`, one-review-per-appointment, and the
-    search indexes listed in the spec (section 23).
-- **Identity**: `ApplicationUser` / `ApplicationRole` (kept in Infrastructure so
-  Domain stays framework-free), cookie authentication, roles (`Admin`,
-  `Doctor`, `Patient`), password policy, authorization policies.
-- **Patient self-registration**, **login**, **logout**, **access denied** —
-  Doctor accounts are intentionally *not* self-service; they'll be created by
-  an Admin in Phase 3, since doctors need to be vetted before receiving
-  bookings.
-- **Seeding**: roles, default specialties, and an optional admin account read
-  entirely from configuration (never hard-coded).
+- Patient registration and sign-in through ASP.NET Core Identity.
+- Self-service password reset: a "forgot password" flow emails a time-limited reset link.
+- Admin screens for doctors, specialties, patients, appointments, and cash collection.
+- Doctor screens for weekly availability, appointment management, medical records, and prescriptions.
+- Patient screens for doctor selection, appointment booking, appointment history, and medical records.
+- Patients can search the doctor list by name, filter by specialty and consultation-fee range, and sort by name or fee.
+- Upcoming appointments get an automatic reminder (email plus an in-app notification) a configurable number of hours before they start. Patients have a notifications inbox with an unread badge in the navigation bar.
+- Patients can cancel or reschedule an appointment online up to a configurable cutoff (default: 2 hours) before it starts. Rescheduling keeps the same payment and returns the appointment to Pending so the clinic re-confirms the new time.
+- Appointment availability and server-side booking checks, including time-slot alignment, past appointments, and overlapping appointments.
+- SQL Server persistence with EF Core migrations and a filtered index to prevent duplicate doctor/time bookings.
+- An immutable audit trail: every created, updated, or deleted domain entity is recorded with the acting user, IP address, and the changed fields, and can be reviewed by admins under **Admin → Audit Log**.
+- Local browser assets in `ClinicBooking.Web/wwwroot/lib` and `wwwroot/webfonts`; no external CDN is required for the site's styles, scripts, or icons.
 
-## Not built yet (upcoming phases)
+Electronic payments are not available. The application accepts cash at the clinic and allows staff to record collection. A payment provider must be integrated before enabling online payments.
 
-Phase 3 (Doctor & Specialty management), Phase 4 (Scheduling/slot generation),
-Phase 5 (Booking + double-booking protection at the service layer), Phase 6
-(Medical records/Prescriptions UI), Phase 7 (Notifications, SignalR, audit
-logs, caching, Docker, tests). The `Application` project currently only has
-its package references wired up — no services/DTOs/validators yet, since
-those land with Phase 3+.
+## Requirements
 
-## Running this locally
+- .NET 8 SDK
+- SQL Server (LocalDB is configured by default for development)
+- `dotnet-ef` tool if you need to apply migrations from the CLI
 
-> This project was scaffolded in a sandbox with no `dotnet` SDK and no
-> network access to nuget.org, so none of this has been restored, built, or
-> migrated yet. Do that on your own machine:
+## Run locally
 
-1. **Prerequisites**: .NET 8 SDK, SQL Server (LocalDB is fine for dev).
+From the solution directory:
 
-2. **Restore & build**
-   ```bash
-   cd ClinicBooking
-   dotnet restore
-   dotnet build
-   ```
-
-3. **Set the connection string** (already defaults to LocalDB in
-   `ClinicBooking.Web/appsettings.json`) — change it if you're pointing at a
-   real SQL Server instance.
-
-4. **(Optional) Seed an admin account** without committing credentials:
-   ```bash
-   cd ClinicBooking.Web
-   dotnet user-secrets init
-   dotnet user-secrets set "SeedAdmin:Email" "admin@example.com"
-   dotnet user-secrets set "SeedAdmin:Password" "ChangeMe123!"
-   ```
-   Leave these unset and no admin account will be created — the app still
-   runs fine without one.
-
-5. **Create and apply the first migration**
-   ```bash
-   cd ..
-   dotnet ef migrations add InitialCreate --project ClinicBooking.Infrastructure --startup-project ClinicBooking.Web
-   dotnet ef database update --project ClinicBooking.Infrastructure --startup-project ClinicBooking.Web
-   ```
-   (If `dotnet ef` isn't installed: `dotnet tool install --global dotnet-ef`.)
-
-6. **Run**
-   ```bash
-   dotnet run --project ClinicBooking.Web
-   ```
-   Browse to the printed `https://localhost:xxxx` URL. You should be able to
-   register a patient account, log in, and log out.
-
-## Project layout
-
+```powershell
+dotnet restore
+dotnet build
+dotnet ef database update --project ClinicBooking.Infrastructure --startup-project ClinicBooking.Web
+dotnet run --project ClinicBooking.Web
 ```
-ClinicBooking.sln
-ClinicBooking.Domain/          # Entities, Enums, Common — no dependencies
-ClinicBooking.Application/     # DTOs, Services, Validators, Mappings (Phase 3+)
-ClinicBooking.Infrastructure/  # DbContext, EF configurations, Identity, Seeding
-ClinicBooking.Web/             # Controllers, Views, ViewModels, Program.cs
+
+The repository already contains the initial and payment-module migrations. Apply them with `database update`; do not create another initial migration for an existing database.
+
+The connection string is in `ClinicBooking.Web/appsettings.json`. Change it for a different SQL Server instance. Do not put real credentials in tracked settings files.
+
+## Tests
+
+The `ClinicBooking.Tests` project contains automated tests for the booking and payment rules and the audit trail:
+
+```powershell
+dotnet test
 ```
+
+The tests run against a throwaway SQL Server LocalDB database (`ClinicBookingTests_<guid>`) that is created and dropped per run, so the real provider is exercised — including the filtered unique index that prevents double-booking. LocalDB must be installed and running (it is by default on the development machine). No existing database is touched.
+
+Covered cases include: valid booking creates a pending appointment and a pending cash payment; double-booking (same doctor/slot, and same patient/time) is rejected; electronic payments, past dates, out-of-hours slots, and inactive doctors are rejected; cancelling releases the slot for rebooking; appointment confirm/complete transitions; the cancel/reschedule cutoff policy (allowed inside the window, rejected outside, and reschedule returns the appointment to Pending while keeping its payment); doctor search by partial name, specialty, and fee range, plus fee sorting; appointment reminders (sent once per upcoming appointment, skipped for cancelled/completed/past/out-of-window appointments, and no duplicate on a second run); notification inbox read/unread handling; marking cash as collected (and rejecting a second collection, non-cash rows, and unknown payments); refunds; creating a medical record with a prescription; and the audit trail recording created/updated/deleted entities with the acting user, IP address, and changed fields.
+
+## Email
+
+Password-reset emails are sent through the `IEmailSender` abstraction. Configure the `Email` section in `ClinicBooking.Web/appsettings.json` (or User Secrets) to use a real SMTP server:
+
+```powershell
+cd ClinicBooking.Web
+dotnet user-secrets set "Email:SmtpHost" "smtp.example.com"
+dotnet user-secrets set "Email:SmtpPort" "587"
+dotnet user-secrets set "Email:SmtpUserName" "<user>"
+dotnet user-secrets set "Email:SmtpPassword" "<password>"
+dotnet user-secrets set "Email:FromAddress" "no-reply@example.com"
+```
+
+When `Email:SmtpHost` is empty, the app falls back to a log-only sender: no mail is sent, but the full message (including the reset link) is written to the application log. This makes the forgot-password flow usable in local development without an SMTP server.
+
+## Appointment change policy
+
+Patients may cancel or reschedule an appointment online only while it is still far enough ahead. The cutoff is configured in `ClinicBooking.Web/appsettings.json`:
+
+```json
+"AppointmentPolicy": {
+  "CancellationCutoffHours": 2
+}
+```
+
+Within the window, the appointment is cancelled or moved and, when rescheduled, reset to `Pending` for clinic re-confirmation. Outside the window the online actions are hidden and the server rejects the request; staff can still change the appointment from the doctor/admin screens. The cutoff is enforced in the service layer (`AppointmentService`), not only in the UI.
+
+## Appointment reminders
+
+A background job reminds patients about upcoming appointments. It runs on a timer, finds appointments that are still ahead but start within the configured window, and sends each patient an email plus an in-app notification. Reminders are sent once per appointment. Configuration lives in `ClinicBooking.Web/appsettings.json`:
+
+```json
+"AppointmentReminder": {
+  "Enabled": true,
+  "HoursBeforeAppointment": 24,
+  "CheckIntervalMinutes": 30
+}
+```
+
+- `Enabled` turns the background job on or off.
+- `HoursBeforeAppointment` is how far ahead of the appointment the reminder goes out.
+- `CheckIntervalMinutes` is how often the job looks for appointments that are due.
+
+Reminder rules live in `AppointmentReminderService` (Infrastructure) so they are unit-tested; the hosted `AppointmentReminderBackgroundService` only provides the timer. Duplicate reminders are prevented by checking for an existing reminder notification, so no extra database column is needed. Patients see their notifications under **My Account → Notifications**, with an unread count shown on the bell in the navigation bar.
+
+## Seed an administrator
+
+The application creates an administrator only when these settings are supplied. In development, use User Secrets from the Web project directory and choose a strong, unique password:
+
+```powershell
+cd ClinicBooking.Web
+dotnet user-secrets init
+dotnet user-secrets set "SeedAdmin:Email" "admin@example.com"
+dotnet user-secrets set "SeedAdmin:Password" "<your-strong-unique-password>"
+dotnet user-secrets set "SeedAdmin:FullName" "Clinic Administrator"
+```
+
+The seed routine synchronizes the configured password for that administrator at startup. Keep these settings in a secret store outside development.
+
+If you already ran an earlier version of this project, rotate the old admin credential in the existing database. Set `SeedAdmin:Email` to `admin@clinicbooking.local` with a new password in User Secrets and start the app once in Development; the seeder will reset that account. The demo accounts use an intentionally public password in Development and are refreshed to it on startup. Never use them outside a private development database.
+
+## Development demo data
+
+The demo dataset is created only in Development. The development profile includes a public demo password, which is displayed with the demo patient email on the home page. These accounts and their data are fictional and must not be used outside local development.
+
+To use a private password instead, override it with User Secrets:
+
+```powershell
+dotnet user-secrets set "SeedDemo:Password" "<your-strong-unique-password>"
+```
+
+The sample patients, doctors, appointments, and records are fictional demonstration data. The demo password is synchronized for those accounts on each Development startup.
+
+## Not included
+
+Online payment processing, notifications UI/SignalR, review screens, and deployment/container setup are not implemented.

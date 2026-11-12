@@ -17,5 +17,8 @@ public class DoctorScheduleConfiguration : IEntityTypeConfiguration<DoctorSchedu
 
         // section 23: index on DoctorSchedules.DoctorId + DayOfWeek
         builder.HasIndex(ds => new { ds.DoctorId, ds.DayOfWeek });
+
+        // Matching query filter for the soft-deleted Doctor principal.
+        builder.HasQueryFilter(ds => !ds.IsDeleted && !ds.Doctor.IsDeleted);
     }
 }

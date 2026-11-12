@@ -26,5 +26,8 @@ public class MedicalRecordConfiguration : IEntityTypeConfiguration<MedicalRecord
         builder.Property(m => m.TreatmentPlan).HasMaxLength(2000);
 
         builder.HasIndex(m => m.PatientId);
+
+        // Matching query filter for the soft-deleted Doctor/Patient principals.
+        builder.HasQueryFilter(m => !m.IsDeleted && !m.Doctor.IsDeleted && !m.Patient.IsDeleted);
     }
 }

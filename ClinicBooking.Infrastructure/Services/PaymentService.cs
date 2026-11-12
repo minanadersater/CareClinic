@@ -83,48 +83,18 @@ public class PaymentService : IPaymentService, ClinicBooking.Application.Service
         return _mapper.Map<PaymentDto>(payment);
     }
 
-    public async Task<PaymentDto> ProcessElectronicPaymentAsync(ProcessPaymentDto dto, CancellationToken ct = default)
+    public Task<PaymentDto> ProcessElectronicPaymentAsync(ProcessPaymentDto dto, CancellationToken ct = default)
     {
-        // Simulated Payment Gateway processing (Visa/Mastercard/Meeza, Mobile Wallets, InstaPay)
-        string txnId = $"TXN-EGP-{DateTime.UtcNow:yyyyMMddHHmmss}-{Random.Shared.Next(1000, 9999)}";
-        string paymentDetails;
-
-        switch (dto.Method)
-        {
-            case PaymentMethod.CreditCard:
-                var maskedCard = !string.IsNullOrWhiteSpace(dto.CardNumber) && dto.CardNumber.Length >= 4
-                    ? $"**** **** **** {dto.CardNumber[^4..]}"
-                    : "بطاقة دفع إلكتروني";
-                paymentDetails = $"الدفع بواسطة بطاقة بنكية ({maskedCard}) - صاحب البطاقة: {dto.CardHolderName}";
-                break;
-
-            case PaymentMethod.MobileWallet:
-                paymentDetails = $"الدفع عبر المحفظة الإلكترونية ({dto.WalletNumber})";
-                break;
-
-            case PaymentMethod.InstaPay:
-                paymentDetails = $"الدفع عبر إنستاباي InstaPay ({dto.InstaPayHandle})";
-                break;
-
-            default:
-                paymentDetails = "دفع إلكتروني";
-                break;
-        }
-
-        return await CreatePaymentAsync(
-            dto.AppointmentId,
-            dto.Amount,
-            dto.Method,
-            PaymentStatus.Paid,
-            txnId,
-            paymentDetails,
-            ct);
+        throw new NotSupportedException("Electronic payments are unavailable until a payment provider is configured.");
     }
 
     public async Task MarkAsPaidAsync(int paymentId, string? notes = null, CancellationToken ct = default)
     {
         var payment = await _context.Payments.FindAsync(new object[] { paymentId }, ct)
             ?? throw new InvalidOperationException("Payment record not found.");
+
+        if (payment.Method != PaymentMethod.Cash || payment.Status != PaymentStatus.Pending)
+            throw new InvalidOperationException("Only pending cash payments can be marked as collected.");
 
         payment.Status = PaymentStatus.Paid;
         payment.PaidAt = DateTime.UtcNow;

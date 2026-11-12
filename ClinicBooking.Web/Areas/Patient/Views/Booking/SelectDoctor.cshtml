@@ -1,16 +1,83 @@
-@model IEnumerable<ClinicBooking.Domain.Entities.Doctor>
+@model ClinicBooking.Web.ViewModels.Patient.DoctorSearchViewModel
 @{
-    ViewData["Title"] = "Select Doctor";
+    ViewData["Title"] = "Find a Doctor";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
     <h2 class="fw-bold text-dark"><i class="fa-solid fa-stethoscope text-primary me-2"></i>Find a Doctor</h2>
 </div>
 
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+        <form asp-action="SelectDoctor" method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-lg-4">
+                <label for="search" class="form-label fw-bold text-dark small">Doctor name</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" id="search" name="search" value="@Model.SearchTerm"
+                           class="form-control bg-light border-0 py-2" placeholder="Search by name..." />
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label for="specialtyId" class="form-label fw-bold text-dark small">Specialty</label>
+                <select id="specialtyId" name="specialtyId" class="form-select bg-light border-0 py-2">
+                    <option value="">All specialties</option>
+                    @foreach (var specialty in Model.Specialties)
+                    {
+                        <option value="@specialty.Id" selected="@(Model.SpecialtyId == specialty.Id)">@specialty.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-6 col-sm-3 col-lg-1">
+                <label for="minFee" class="form-label fw-bold text-dark small">Min fee</label>
+                <input type="number" id="minFee" name="minFee" value="@Model.MinFee" min="0" step="10"
+                       class="form-control bg-light border-0 py-2" placeholder="0" />
+            </div>
+
+            <div class="col-6 col-sm-3 col-lg-1">
+                <label for="maxFee" class="form-label fw-bold text-dark small">Max fee</label>
+                <input type="number" id="maxFee" name="maxFee" value="@Model.MaxFee" min="0" step="10"
+                       class="form-control bg-light border-0 py-2" placeholder="Any" />
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-2">
+                <label for="sort" class="form-label fw-bold text-dark small">Sort by</label>
+                <select id="sort" name="sort" class="form-select bg-light border-0 py-2">
+                    <option value="@DoctorSortOrder.NameAscending" selected="@(Model.Sort == DoctorSortOrder.NameAscending)">Name (A-Z)</option>
+                    <option value="@DoctorSortOrder.FeeAscending" selected="@(Model.Sort == DoctorSortOrder.FeeAscending)">Fee (low to high)</option>
+                    <option value="@DoctorSortOrder.FeeDescending" selected="@(Model.Sort == DoctorSortOrder.FeeDescending)">Fee (high to low)</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-1 d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-3 w-100" title="Apply filters">
+                    <i class="fa-solid fa-filter"></i>
+                </button>
+                @if (Model.HasFilters)
+                {
+                    <a asp-action="SelectDoctor" class="btn btn-outline-secondary rounded-3" title="Clear filters">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.HasFilters)
+{
+    <p class="text-muted small mb-3">
+        <i class="fa-solid fa-circle-info me-1"></i>
+        Showing @Model.Doctors.Count doctor(s) matching your filters.
+    </p>
+}
+
 <div class="row">
-    @if (Model != null && Model.Any())
+    @if (Model.Doctors != null && Model.Doctors.Any())
     {
-        foreach (var doctor in Model)
+        foreach (var doctor in Model.Doctors)
         {
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 border-0 shadow-sm rounded-4 feature-card text-center p-4">
@@ -19,9 +86,9 @@
                     </div>
                     <h5 class="fw-bold text-dark mb-1">Dr. @doctor.FullName</h5>
                     <p class="text-muted small mb-2">
-                        @if (doctor.DoctorSpecialties != null && doctor.DoctorSpecialties.Any())
+                        @if (doctor.Specialties != null && doctor.Specialties.Any())
                         {
-                            @string.Join(", ", doctor.DoctorSpecialties.Select(ds => ds.Specialty?.Name))
+                            @string.Join(", ", doctor.Specialties)
                         }
                         else
                         {
@@ -29,7 +96,7 @@
                         }
                     </p>
                     <div class="fw-bold text-success mb-3">@doctor.ConsultationFee ج.م (EGP) <span class="text-muted fw-normal small">/ visit</span></div>
-                    
+
                     <a asp-action="SelectSlot" asp-route-doctorId="@doctor.Id" class="btn btn-outline-primary rounded-pill w-100 fw-medium mt-auto">
                         <i class="fa-solid fa-calendar-check me-2"></i> View Availability
                     </a>
@@ -40,8 +107,16 @@
     else
     {
         <div class="col-12 text-center py-5">
-            <h4 class="text-muted">No active doctors found at the moment.</h4>
+            <div class="fs-1 text-muted mb-2"><i class="fa-solid fa-user-doctor"></i></div>
+            <h4 class="text-muted">
+                @(Model.HasFilters ? "No doctors match your search." : "No active doctors found at the moment.")
+            </h4>
+            @if (Model.HasFilters)
+            {
+                <a asp-action="SelectDoctor" class="btn btn-outline-primary rounded-pill px-4 mt-2">
+                    <i class="fa-solid fa-rotate-left me-1"></i> Clear filters
+                </a>
+            }
         </div>
     }
 </div>
-

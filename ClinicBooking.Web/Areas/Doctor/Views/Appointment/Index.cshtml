@@ -1,11 +1,36 @@
 @using ClinicBooking.Application.Common.DTOs
-@model IReadOnlyList<AppointmentDto>
+@using ClinicBooking.Domain.Enums
+@model ClinicBooking.Web.ViewModels.Doctor.DoctorAppointmentsViewModel
 @{
     ViewData["Title"] = "My Appointments";
+    var paged = Model.Appointments;
+    var filter = Model.Filter;
+    var stats = Model.Stats;
+
+    var tabs = new (DoctorAppointmentTab Tab, string Label, string Icon, int Count)[]
+    {
+        (DoctorAppointmentTab.All, "All", "fa-list", stats.Total),
+        (DoctorAppointmentTab.Today, "Today", "fa-calendar-day", stats.Today),
+        (DoctorAppointmentTab.Upcoming, "Upcoming", "fa-calendar-plus", stats.Upcoming),
+        (DoctorAppointmentTab.Past, "Past", "fa-clock-rotate-left", stats.Past),
+        (DoctorAppointmentTab.Pending, "Pending", "fa-hourglass-half", stats.Pending),
+        (DoctorAppointmentTab.Confirmed, "Confirmed", "fa-circle-check", stats.Confirmed),
+        (DoctorAppointmentTab.Completed, "Completed", "fa-flag-checkered", stats.Completed),
+        (DoctorAppointmentTab.Cancelled, "Cancelled", "fa-circle-xmark", stats.Cancelled)
+    };
+
+    var startPage = Math.Max(1, paged.Page - 2);
+    var endPage = Math.Min(paged.TotalPages, startPage + 4);
+    startPage = Math.Max(1, endPage - 4);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
-    <h2 class="fw-bold text-dark"><i class="fa-solid fa-calendar-check text-primary me-2"></i>My Appointments</h2>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 mt-3 gap-2">
+    <h2 class="fw-bold text-dark mb-0">
+        <i class="fa-solid fa-calendar-check text-primary me-2"></i>My Appointments
+    </h2>
+    <a asp-area="Doctor" asp-controller="Schedule" asp-action="Index" class="btn btn-outline-primary rounded-pill px-3">
+        <i class="fa-regular fa-clock me-1"></i> Manage Schedule
+    </a>
 </div>
 
 @if (TempData["Success"] is not null)
@@ -16,6 +41,136 @@
     </div>
 }
 
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body d-flex align-items-center">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary me-3" style="width: 48px; height: 48px;">
+                    <i class="fa-solid fa-calendar-day fs-5"></i>
+                </span>
+                <div>
+                    <div class="text-muted small">Today</div>
+                    <div class="fs-4 fw-bold text-dark lh-1">@stats.Today</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body d-flex align-items-center">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning-subtle text-warning-emphasis me-3" style="width: 48px; height: 48px;">
+                    <i class="fa-solid fa-hourglass-half fs-5"></i>
+                </span>
+                <div>
+                    <div class="text-muted small">Pending</div>
+                    <div class="fs-4 fw-bold text-dark lh-1">@stats.Pending</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body d-flex align-items-center">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success-emphasis me-3" style="width: 48px; height: 48px;">
+                    <i class="fa-solid fa-hand-holding-dollar fs-5"></i>
+                </span>
+                <div>
+                    <div class="text-muted small">Collected</div>
+                    <div class="fs-5 fw-bold text-dark lh-1">@stats.CollectedAmount.ToString("N0") <span class="small text-muted">@stats.Currency</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body d-flex align-items-center">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger-subtle text-danger-emphasis me-3" style="width: 48px; height: 48px;">
+                    <i class="fa-solid fa-clock-rotate-left fs-5"></i>
+                </span>
+                <div>
+                    <div class="text-muted small">Outstanding</div>
+                    <div class="fs-5 fw-bold text-dark lh-1">@stats.OutstandingAmount.ToString("N0") <span class="small text-muted">@stats.Currency</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-pills flex-nowrap overflow-auto mb-3 gap-1">
+    @foreach (var tab in tabs)
+    {
+        var isActive = filter.Tab == tab.Tab;
+        <li class="nav-item">
+            <a asp-action="Index" asp-all-route-data="RouteFor(tab.Tab, 1)"
+               class="nav-link rounded-pill px-3 text-nowrap @(isActive ? "active" : "text-dark bg-light")">
+                <i class="fa-solid @tab.Icon me-1"></i>@tab.Label
+                @if (tab.Count > 0)
+                {
+                    <span class="badge rounded-pill ms-1 @(isActive ? "bg-white text-primary" : "bg-secondary-subtle text-secondary-emphasis")">@tab.Count</span>
+                }
+            </a>
+        </li>
+    }
+</ul>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3 p-md-4">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+            <input type="hidden" name="tab" value="@filter.Tab" />
+            <div class="col-12 col-lg-4">
+                <label for="search" class="form-label fw-bold text-dark small">Patient name</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" id="search" name="search" value="@filter.SearchTerm"
+                           class="form-control bg-light border-0 py-2" placeholder="Search by patient name..." />
+                </div>
+            </div>
+            <div class="col-6 col-sm-4 col-lg-2">
+                <label for="fromDate" class="form-label fw-bold text-dark small">From</label>
+                <input type="date" id="fromDate" name="fromDate" value="@filter.FromDate?.ToString("yyyy-MM-dd")"
+                       class="form-control bg-light border-0 py-2" />
+            </div>
+            <div class="col-6 col-sm-4 col-lg-2">
+                <label for="toDate" class="form-label fw-bold text-dark small">To</label>
+                <input type="date" id="toDate" name="toDate" value="@filter.ToDate?.ToString("yyyy-MM-dd")"
+                       class="form-control bg-light border-0 py-2" />
+            </div>
+            <div class="col-12 col-sm-4 col-lg-2">
+                <label for="sort" class="form-label fw-bold text-dark small">Sort by</label>
+                <select id="sort" name="sort" class="form-select bg-light border-0 py-2">
+                    <option value="@DoctorAppointmentSortOrder.DateDescending" selected="@(filter.Sort == DoctorAppointmentSortOrder.DateDescending)">Newest first</option>
+                    <option value="@DoctorAppointmentSortOrder.DateAscending" selected="@(filter.Sort == DoctorAppointmentSortOrder.DateAscending)">Oldest first</option>
+                    <option value="@DoctorAppointmentSortOrder.PatientName" selected="@(filter.Sort == DoctorAppointmentSortOrder.PatientName)">Patient name</option>
+                </select>
+            </div>
+            <div class="col-12 col-lg-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-3 flex-grow-1" title="Apply filters">
+                    <i class="fa-solid fa-filter me-1"></i> Apply
+                </button>
+                @if (filter.HasFilters)
+                {
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-3" title="Clear filters">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<p class="text-muted small mb-2">
+    <i class="fa-solid fa-circle-info me-1"></i>
+    Showing @paged.Items.Count of @paged.TotalCount appointment(s)
+    @if (filter.HasFilters)
+    {
+        <text>matching your filters</text>
+    }
+</p>
+
+<!-- Table -->
 <div class="card border-0 shadow-sm rounded-4">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -26,73 +181,101 @@
                         <th>Date</th>
                         <th>Time</th>
                         <th>Status</th>
+                        <th>Payment</th>
                         <th>Notes</th>
                         <th class="text-end pe-4">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model != null && Model.Any())
+                    @if (paged.Items.Any())
                     {
-                        @foreach (var a in Model.OrderByDescending(x => x.AppointmentDate).ThenBy(x => x.StartTime))
+                        @foreach (var a in paged.Items)
                         {
-                            <tr>
+                            var isToday = a.AppointmentDate == DateOnly.FromDateTime(DateTime.Today);
+                            <tr class="@(isToday ? "table-primary" : "")">
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
-                                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 38px; height: 38px;">
+                                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2 flex-shrink-0" style="width: 38px; height: 38px;">
                                             <i class="fa-solid fa-user-injured"></i>
                                         </div>
-                                        <div class="fw-bold text-dark">@a.PatientName</div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@a.PatientName</div>
+                                            <span class="text-muted small">#@a.PatientId</span>
+                                        </div>
                                     </div>
                                 </td>
-                                <td>@a.AppointmentDate.ToString("MMM dd, yyyy")</td>
-                                <td class="fw-medium text-primary">@a.StartTime.ToString(@"hh\:mm") – @a.EndTime.ToString(@"hh\:mm")</td>
                                 <td>
-                                    <span class="badge rounded-pill px-3 py-2 @(a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Pending ? "bg-warning text-dark" :
-                                                         a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Confirmed ? "bg-primary text-white" :
-                                                         a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Completed ? "bg-success text-white" : "bg-danger text-white")">
-                                        @a.Status
-                                    </span>
+                                    <div class="fw-medium text-dark">@a.AppointmentDate.ToString("MMM dd, yyyy")</div>
+                                    <span class="text-muted small">@a.AppointmentDate.ToString("dddd")</span>
                                 </td>
-                                <td><span class="text-truncate d-inline-block text-muted" style="max-width: 180px;">@a.PatientNotes</span></td>
+                                <td class="fw-medium text-primary text-nowrap">@a.StartTime.ToString(@"hh\:mm") – @a.EndTime.ToString(@"hh\:mm")</td>
+                                <td>
+                                    <span class="badge rounded-pill px-3 py-2 @StatusBadgeClass(a.Status)">@a.Status</span>
+                                </td>
+                                <td class="text-nowrap">
+                                    @if (a.PaymentStatus == PaymentStatus.Paid)
+                                    {
+                                        <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-2 py-1">
+                                            <i class="fa-solid fa-circle-check me-1"></i>Paid @(a.PaymentAmount?.ToString("N0")) @a.PaymentCurrency
+                                        </span>
+                                    }
+                                    else if (a.PaymentStatus == PaymentStatus.Pending)
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2 py-1">
+                                            <i class="fa-regular fa-clock me-1"></i>Due @(a.PaymentAmount?.ToString("N0")) @a.PaymentCurrency
+                                        </span>
+                                    }
+                                    else if (a.PaymentStatus is not null)
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-2 py-1">@a.PaymentStatus</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">—</span>
+                                    }
+                                </td>
+                                <td><span class="text-truncate d-inline-block text-muted" style="max-width: 160px;" title="@a.PatientNotes">@a.PatientNotes</span></td>
                                 <td class="text-end pe-4">
-                                    <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary rounded-pill px-3 me-1">
-                                        <i class="fa-solid fa-eye me-1"></i> Details
-                                    </a>
-                                    @if (a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Pending)
-                                    {
-                                        <form asp-action="Confirm" asp-route-id="@a.Id" method="post" class="d-inline">
-                                            <button class="btn btn-sm btn-success rounded-pill px-3 me-1">
-                                                <i class="fa-solid fa-check me-1"></i> Confirm
-                                            </button>
-                                        </form>
-                                    }
-                                    @if (a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Confirmed)
-                                    {
-                                        <form asp-action="Complete" asp-route-id="@a.Id" method="post" class="d-inline">
-                                            <button class="btn btn-sm btn-primary rounded-pill px-3 me-1">
-                                                <i class="fa-solid fa-circle-check me-1"></i> Complete
-                                            </button>
-                                        </form>
-                                    }
-                                    @if (a.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Completed)
-                                    {
-                                        <a asp-area="Doctor" asp-controller="MedicalRecord" asp-action="Create"
-                                           asp-route-patientId="@a.PatientId" asp-route-appointmentId="@a.Id"
-                                           class="btn btn-sm btn-outline-info rounded-pill px-3 me-1">
-                                            <i class="fa-solid fa-file-medical me-1"></i> Add Record
+                                    <div class="d-inline-flex flex-wrap justify-content-end gap-1">
+                                        <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                            <i class="fa-solid fa-eye me-1"></i> Details
                                         </a>
-                                    }
-                                    @if (a.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled && a.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Completed)
-                                    {
-                                        <form asp-action="Cancel" method="post" class="d-inline">
-                                            <input type="hidden" name="AppointmentId" value="@a.Id" />
-                                            <input type="hidden" name="CancellationReason" value="Doctor cancelled" />
-                                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                                    onclick="return confirm('Are you sure you want to cancel this appointment?')">
-                                                <i class="fa-solid fa-xmark me-1"></i> Cancel
-                                            </button>
-                                        </form>
-                                    }
+                                        @if (a.Status == AppointmentStatus.Pending)
+                                        {
+                                            <form asp-action="Confirm" asp-route-id="@a.Id" method="post" class="d-inline">
+                                                <button class="btn btn-sm btn-success rounded-pill px-3">
+                                                    <i class="fa-solid fa-check me-1"></i> Confirm
+                                                </button>
+                                            </form>
+                                        }
+                                        @if (a.Status == AppointmentStatus.Confirmed)
+                                        {
+                                            <form asp-action="Complete" asp-route-id="@a.Id" method="post" class="d-inline">
+                                                <button class="btn btn-sm btn-primary rounded-pill px-3">
+                                                    <i class="fa-solid fa-circle-check me-1"></i> Complete
+                                                </button>
+                                            </form>
+                                        }
+                                        @if (a.Status == AppointmentStatus.Completed)
+                                        {
+                                            <a asp-area="Doctor" asp-controller="MedicalRecord" asp-action="Create"
+                                               asp-route-patientId="@a.PatientId" asp-route-appointmentId="@a.Id"
+                                               class="btn btn-sm btn-outline-info rounded-pill px-3">
+                                                <i class="fa-solid fa-file-medical me-1"></i> Add Record
+                                            </a>
+                                        }
+                                        @if (a.Status != AppointmentStatus.Cancelled && a.Status != AppointmentStatus.Completed)
+                                        {
+                                            <form asp-action="Cancel" method="post" class="d-inline">
+                                                <input type="hidden" name="AppointmentId" value="@a.Id" />
+                                                <input type="hidden" name="CancellationReason" value="Doctor cancelled" />
+                                                <button class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                                        onclick="return confirm('Are you sure you want to cancel this appointment?')">
+                                                    <i class="fa-solid fa-xmark me-1"></i> Cancel
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -100,10 +283,16 @@
                     else
                     {
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
+                            <td colspan="7" class="text-center py-5 text-muted">
                                 <div class="fs-1 text-light mb-3"><i class="fa-solid fa-calendar-xmark"></i></div>
-                                <h5>No Appointments Scheduled</h5>
-                                <p>You have no appointments on record.</p>
+                                <h5>@(filter.HasFilters ? "No appointments match your filters" : "No Appointments Scheduled")</h5>
+                                <p class="mb-3">@(filter.HasFilters ? "Try changing the filters above." : "You have no appointments on record.")</p>
+                                @if (filter.HasFilters)
+                                {
+                                    <a asp-action="Index" class="btn btn-outline-primary rounded-pill px-4">
+                                        <i class="fa-solid fa-rotate-left me-1"></i> Clear filters
+                                    </a>
+                                }
                             </td>
                         </tr>
                     }
@@ -111,4 +300,69 @@
             </table>
         </div>
     </div>
+
+    @if (paged.TotalPages > 1)
+    {
+        <div class="card-footer bg-white border-0 d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+            <span class="text-muted small">Page @paged.Page of @paged.TotalPages</span>
+            <nav aria-label="Appointments pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(paged.HasPrevious ? "" : "disabled")">
+                        <a class="page-link rounded-start-pill" asp-action="Index" asp-all-route-data="RouteFor(filter.Tab, paged.Page - 1)" aria-label="Previous">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    @for (var i = startPage; i <= endPage; i++)
+                    {
+                        <li class="page-item @(i == paged.Page ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-all-route-data="RouteFor(filter.Tab, i)">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(paged.HasNext ? "" : "disabled")">
+                        <a class="page-link rounded-end-pill" asp-action="Index" asp-all-route-data="RouteFor(filter.Tab, paged.Page + 1)" aria-label="Next">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
 </div>
+
+@functions {
+    string StatusBadgeClass(AppointmentStatus s) => s switch
+    {
+        AppointmentStatus.Pending => "bg-warning text-dark",
+        AppointmentStatus.Confirmed => "bg-primary text-white",
+        AppointmentStatus.Completed => "bg-success text-white",
+        AppointmentStatus.Cancelled => "bg-danger text-white",
+        _ => "bg-secondary text-white"
+    };
+
+    // Builds the query string used by tab and pagination links so the current
+    // search, date range and sort are preserved when navigating.
+    Dictionary<string, string> RouteFor(DoctorAppointmentTab tab, int page)
+    {
+        var values = new Dictionary<string, string>
+        {
+            ["tab"] = tab.ToString(),
+            ["sort"] = Model.Filter.Sort.ToString(),
+            ["page"] = (page < 1 ? 1 : page).ToString()
+        };
+
+        if (!string.IsNullOrWhiteSpace(Model.Filter.SearchTerm))
+        {
+            values["search"] = Model.Filter.SearchTerm!;
+        }
+        if (Model.Filter.FromDate is { } from)
+        {
+            values["fromDate"] = from.ToString("yyyy-MM-dd");
+        }
+        if (Model.Filter.ToDate is { } to)
+        {
+            values["toDate"] = to.ToString("yyyy-MM-dd");
+        }
+
+        return values;
+    }
+}

@@ -5,7 +5,6 @@ namespace ClinicBooking.Web.ViewModels.Doctor;
 public class CreateRecordViewModel
 {
     public int AppointmentId { get; set; }
-    public int PatientId { get; set; }
     public string PatientName { get; set; } = string.Empty;
 
     [Required]

@@ -1,0 +1,87 @@
+@model ClinicBooking.Web.ViewModels.Patient.RescheduleAppointmentViewModel
+@{
+    ViewData["Title"] = "Reschedule Appointment";
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a asp-action="Details" asp-route-id="@Model.AppointmentId" class="btn btn-outline-secondary rounded-circle me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0">Reschedule Appointment</h3>
+                <span class="text-muted small">with Dr. @Model.DoctorName</span>
+            </div>
+        </div>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="alert alert-info rounded-3 small" role="alert">
+            <i class="fa-solid fa-circle-info me-2"></i>
+            Your current appointment is on <strong>@Model.CurrentDate.ToString("dddd, MMMM dd, yyyy")</strong>
+            at <strong>@Model.CurrentStartTime.ToString(@"hh\:mm")</strong>. Choose a new date and time below.
+            You can reschedule up to <strong>@Model.CancellationCutoffHours</strong> hour(s) before the appointment.
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <form asp-action="Reschedule" asp-route-id="@Model.AppointmentId" method="get" class="row g-3 align-items-end">
+                    <div class="col-sm">
+                        <label class="form-label fw-bold text-dark">Select a new date</label>
+                        <input type="date" name="date" class="form-control rounded-3 bg-light border-0 py-2"
+                               value="@Model.SelectedDate.ToString("yyyy-MM-dd")"
+                               min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-sm-auto">
+                        <button type="submit" class="btn btn-primary rounded-3 w-100">
+                            <i class="fa-solid fa-magnifying-glass me-2" aria-hidden="true"></i> Show availability
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fa-regular fa-clock text-primary me-2"></i>
+                    Available Slots on @Model.SelectedDate.ToString("MMM dd, yyyy")
+                </h5>
+
+                @if (Model.Slots != null && Model.Slots.Any())
+                {
+                    <div class="row g-3 mt-2">
+                        @foreach (var slot in Model.Slots)
+                        {
+                            <div class="col-6 col-sm-4 col-md-3">
+                                <form asp-action="Reschedule" method="post">
+                                    <input type="hidden" name="appointmentId" value="@Model.AppointmentId" />
+                                    <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="startTime" value="@slot" />
+                                    <button type="submit" class="btn btn-outline-primary w-100 rounded-3 py-2 fw-medium">
+                                        <i class="fa-regular fa-clock me-1"></i> @DateTime.Today.Add(slot).ToString("hh:mm tt")
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 bg-light rounded-3 mt-3">
+                        <div class="fs-1 text-muted mb-2"><i class="fa-solid fa-calendar-xmark"></i></div>
+                        <h6 class="text-muted mb-0">No available slots for this date.</h6>
+                        <p class="small text-muted mt-1">Please try selecting a different date.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

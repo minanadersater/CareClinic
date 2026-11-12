@@ -35,7 +35,11 @@ public class AppointmentController : Controller
     public async Task<IActionResult> MarkPaymentPaid(int appointmentId, int paymentId)
     {
         var appointment = await _appointmentService.GetAppointmentByIdAsync(appointmentId);
-        if (appointment is null) return NotFound();
+        if (appointment is null || appointment.PaymentId != paymentId) return NotFound();
+        if (appointment.PaymentMethod != ClinicBooking.Domain.Enums.PaymentMethod.Cash ||
+            appointment.PaymentStatus != ClinicBooking.Domain.Enums.PaymentStatus.Pending ||
+            appointment.Status == ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled)
+            return Conflict("Only unpaid cash appointments can be marked as paid.");
 
         await _paymentService.MarkAsPaidAsync(paymentId, "تم تحصيل المبلغ نقداً في العيادة (تسجيل الإدارة)");
         TempData["SuccessMessage"] = "تم تأكيد تحصيل المبلغ نقداً بنجاح.";

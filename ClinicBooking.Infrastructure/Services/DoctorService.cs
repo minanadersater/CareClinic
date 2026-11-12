@@ -104,6 +104,50 @@ public class DoctorService : IDoctorService, ClinicBooking.Application.Services.
         return _mapper.Map<IReadOnlyList<DoctorDto>>(doctors);
     }
 
+    public async Task<IReadOnlyList<DoctorDto>> SearchActiveDoctorsAsync(DoctorSearchFilter filter, CancellationToken ct = default)
+    {
+        filter ??= new DoctorSearchFilter();
+
+        var query = _context.Doctors
+            .Include(d => d.DoctorSpecialties)
+                .ThenInclude(ds => ds.Specialty)
+            .Where(d => d.IsActive);
+
+        if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+        {
+            var term = filter.SearchTerm.Trim();
+            query = query.Where(d => d.FullName.Contains(term));
+        }
+
+        if (filter.SpecialtyId is > 0)
+        {
+            var specialtyId = filter.SpecialtyId.Value;
+            query = query.Where(d => d.DoctorSpecialties.Any(ds => ds.SpecialtyId == specialtyId));
+        }
+
+        if (filter.MinFee is not null)
+        {
+            var minFee = filter.MinFee.Value;
+            query = query.Where(d => d.ConsultationFee >= minFee);
+        }
+
+        if (filter.MaxFee is not null)
+        {
+            var maxFee = filter.MaxFee.Value;
+            query = query.Where(d => d.ConsultationFee <= maxFee);
+        }
+
+        query = filter.Sort switch
+        {
+            DoctorSortOrder.FeeAscending => query.OrderBy(d => d.ConsultationFee).ThenBy(d => d.FullName),
+            DoctorSortOrder.FeeDescending => query.OrderByDescending(d => d.ConsultationFee).ThenBy(d => d.FullName),
+            _ => query.OrderBy(d => d.FullName)
+        };
+
+        var doctors = await query.AsNoTracking().ToListAsync(ct);
+        return _mapper.Map<IReadOnlyList<DoctorDto>>(doctors);
+    }
+
     public async Task<Doctor> CreateDoctorAsync(CreateDoctorDto dto)
     {
         var user = new ApplicationUser

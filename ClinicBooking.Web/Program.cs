@@ -53,8 +53,36 @@ builder.Services.AddAuthorization(options =>
 });
 
 // ---- Application + Infrastructure services ----
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ClinicBooking.Application.Common.Interfaces.ICurrentUserService,
+    ClinicBooking.Web.Services.HttpContextCurrentUserService>();
+
+// ---- Email sender (SMTP when configured, otherwise log-only fallback) ----
+builder.Services.Configure<ClinicBooking.Infrastructure.Email.EmailOptions>(
+    builder.Configuration.GetSection("Email"));
+
+if (!string.IsNullOrWhiteSpace(builder.Configuration["Email:SmtpHost"]))
+{
+    builder.Services.AddScoped<ClinicBooking.Application.Common.Interfaces.IEmailSender,
+        ClinicBooking.Infrastructure.Email.SmtpEmailSender>();
+}
+else
+{
+    builder.Services.AddScoped<ClinicBooking.Application.Common.Interfaces.IEmailSender,
+        ClinicBooking.Infrastructure.Email.LoggingEmailSender>();
+}
+
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices();
+
+// ---- Appointment policy (cancel/reschedule cutoff) ----
+builder.Services.Configure<ClinicBooking.Application.Common.AppointmentPolicyOptions>(
+    builder.Configuration.GetSection(ClinicBooking.Application.Common.AppointmentPolicyOptions.SectionName));
+
+// ---- Appointment reminders (background job) ----
+builder.Services.Configure<ClinicBooking.Application.Common.AppointmentReminderOptions>(
+    builder.Configuration.GetSection(ClinicBooking.Application.Common.AppointmentReminderOptions.SectionName));
+builder.Services.AddHostedService<ClinicBooking.Web.Services.AppointmentReminderBackgroundService>();
 
 // ---- MVC + Areas ----
 builder.Services.AddControllersWithViews();

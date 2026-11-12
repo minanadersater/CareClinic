@@ -3,18 +3,37 @@
 }
 
 <!-- Hero Section -->
+@if (ViewData["DemoPassword"] is string demoPassword && ViewData["DemoPatientEmail"] is string demoEmail)
+{
+    <div class="alert alert-info border-0 shadow-sm rounded-4 mt-3 mb-4" role="note">
+        <div class="d-flex align-items-start gap-3">
+            <i class="fa-solid fa-flask fs-4 text-primary mt-1" aria-hidden="true"></i>
+            <div>
+                <h2 class="h5 fw-bold mb-2">Development demo account</h2>
+                <p class="mb-2">Use this patient account to explore the booking flow.</p>
+                <div class="d-flex flex-wrap gap-3 mb-2">
+                    <span><strong>Email:</strong> <code>@demoEmail</code></span>
+                    <span><strong>Password:</strong> <code>@demoPassword</code></span>
+                </div>
+                <a asp-controller="Account" asp-action="Login" class="alert-link">Sign in to the demo account</a>
+                <span class="small text-muted ms-2">Visible only in Development.</span>
+            </div>
+        </div>
+    </div>
+}
+
 <div class="hero-section text-center text-lg-start d-flex align-items-center mt-3">
     <div class="row w-100 align-items-center">
         <div class="col-lg-6 ps-lg-5 mb-5 mb-lg-0 text-center text-lg-start">
             <span class="badge bg-white text-primary border px-3 py-2 rounded-pill mb-3 shadow-sm" style="font-weight: 600;">
-                <i class="fa-solid fa-star text-warning me-1"></i> Top Rated Clinic Management
+                <i class="fa-solid fa-heart-pulse text-primary me-1"></i> CareClinic
             </span>
             <h1 class="hero-title">
                 Your Health, <br />
                 <span class="text-primary">Our Priority.</span>
             </h1>
             <p class="hero-subtitle">
-                Experience hassle-free medical appointments. Find the best doctors, manage your health records, and book your visit in seconds.
+                Find a doctor, choose an available appointment, and keep your clinic visits and medical records in one place.
             </p>
             <div class="d-flex gap-3 justify-content-center justify-content-lg-start">
                 <a asp-area="Patient" asp-controller="Booking" asp-action="SelectDoctor" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">
@@ -24,15 +43,19 @@
                     Learn More
                 </a>
             </div>
+            @if (User.Identity?.IsAuthenticated != true)
+            {
+                <p class="small text-muted mt-3 mb-0">Booking requires a patient account. <a asp-controller="Account" asp-action="Login">Sign in</a> or <a asp-controller="Account" asp-action="Register">create an account</a>.</p>
+            }
         </div>
-        <div class="col-lg-6 d-none d-lg-block text-center position-relative">
+        <div class="col-lg-6 text-center position-relative">
             <!-- Decorative circle -->
             <div class="position-absolute bg-primary rounded-circle" style="width: 400px; height: 400px; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; z-index: 0;"></div>
             
-            <img src="https://images.unsplash.com/photo-1638202993928-7267aad84c31?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+            <img src="~/images/clinic-care.svg" asp-append-version="true"
                  alt="Doctor caring for patient" 
                  class="img-fluid rounded-4 shadow-lg position-relative" 
-                 style="object-fit: cover; height: 420px; border: 6px solid white; z-index: 1;">
+                 style="object-fit: cover; height: 420px; max-width: 100%; border: 6px solid white; z-index: 1;" fetchpriority="high">
             
             <!-- Floating Card -->
             <div class="position-absolute bg-white p-3 rounded-4 shadow d-flex align-items-center" style="bottom: 20px; left: 0px; z-index: 2;">
@@ -40,8 +63,8 @@
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <div class="text-start">
-                    <div class="fw-bold text-dark">50+ Specialists</div>
-                    <div class="small text-muted">Ready to help you</div>
+                    <div class="fw-bold text-dark">Your care, made simpler</div>
+                    <div class="small text-muted">Choose a doctor and appointment</div>
                 </div>
             </div>
         </div>
@@ -54,21 +77,21 @@
         <div class="p-4 bg-white rounded-4 shadow-sm h-100 feature-card">
             <div class="fs-1 text-primary mb-3"><i class="fa-solid fa-user-doctor"></i></div>
             <h4 class="fw-bold">Expert Doctors</h4>
-            <p class="text-muted">Choose from our wide range of highly qualified and experienced specialists in various fields.</p>
+            <p class="text-muted">Browse the doctors and specialties available through the clinic.</p>
         </div>
     </div>
     <div class="col-md-4 mb-4">
         <div class="p-4 bg-white rounded-4 shadow-sm h-100 feature-card">
             <div class="fs-1 text-primary mb-3"><i class="fa-solid fa-clock"></i></div>
-            <h4 class="fw-bold">24/7 Booking</h4>
-            <p class="text-muted">Book your appointments anywhere, anytime, with our real-time schedule updates.</p>
+            <h4 class="fw-bold">Simple Appointment Booking</h4>
+            <p class="text-muted">Browse available appointment times and choose the visit that works for you.</p>
         </div>
     </div>
     <div class="col-md-4 mb-4">
         <div class="p-4 bg-white rounded-4 shadow-sm h-100 feature-card">
             <div class="fs-1 text-primary mb-3"><i class="fa-solid fa-file-medical"></i></div>
             <h4 class="fw-bold">Digital Records</h4>
-            <p class="text-muted">Access your prescriptions and medical history securely directly from your dashboard.</p>
+            <p class="text-muted">Review prescriptions and medical history from your patient dashboard.</p>
         </div>
     </div>
 </div>

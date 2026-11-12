@@ -1,0 +1,101 @@
+@using ClinicBooking.Application.Common.DTOs
+@using ClinicBooking.Domain.Enums
+@model IReadOnlyList<NotificationDto>
+@{
+    ViewData["Title"] = "Notifications";
+    var unread = Model.Count(n => !n.IsRead);
+
+    string Icon(NotificationType type) => type switch
+    {
+        NotificationType.AppointmentReminder => "fa-solid fa-bell",
+        NotificationType.AppointmentConfirmed => "fa-solid fa-circle-check",
+        NotificationType.AppointmentCancelled => "fa-solid fa-circle-xmark",
+        NotificationType.AppointmentRescheduled => "fa-solid fa-calendar-day",
+        NotificationType.NewAppointmentForDoctor => "fa-solid fa-user-doctor",
+        _ => "fa-solid fa-circle-info"
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="fw-bold text-dark">
+        <i class="fa-regular fa-bell text-primary me-2"></i>Notifications
+        @if (unread > 0)
+        {
+            <span class="badge bg-danger rounded-pill align-middle ms-2">@unread new</span>
+        }
+    </h2>
+    @if (unread > 0)
+    {
+        <form asp-action="MarkAllAsRead" method="post">
+            <button type="submit" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="fa-solid fa-check-double me-1"></i> Mark all as read
+            </button>
+        </form>
+    }
+</div>
+
+@if (TempData["Success"] is not null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+        <i class="fa-solid fa-circle-check me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (Model.Any())
+{
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="list-group list-group-flush rounded-4">
+            @foreach (var notification in Model)
+            {
+                <div class="list-group-item p-4 @(notification.IsRead ? "" : "bg-light")">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-circle @(notification.IsRead ? "bg-secondary-subtle text-secondary" : "bg-primary text-white")"
+                                  style="width: 44px; height: 44px;">
+                                <i class="@Icon(notification.Type)"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h6 class="fw-bold mb-1 @(notification.IsRead ? "text-muted" : "text-dark")">
+                                    @notification.Title
+                                </h6>
+                                <small class="text-muted text-nowrap ms-2">
+                                    <i class="fa-regular fa-clock me-1"></i>@notification.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                </small>
+                            </div>
+                            <p class="text-muted mb-2">@notification.Message</p>
+                            <div class="d-flex gap-2">
+                                @if (notification.AppointmentId is int appointmentId)
+                                {
+                                    <a asp-area="Patient" asp-controller="Appointment" asp-action="Details" asp-route-id="@appointmentId"
+                                       class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        <i class="fa-solid fa-eye me-1"></i> View appointment
+                                    </a>
+                                }
+                                @if (!notification.IsRead)
+                                {
+                                    <form asp-action="MarkAsRead" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@notification.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                            <i class="fa-solid fa-check me-1"></i> Mark as read
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <div class="fs-1 text-muted mb-2"><i class="fa-regular fa-bell-slash"></i></div>
+        <h4 class="text-muted">You have no notifications.</h4>
+        <p class="text-muted small">Appointment reminders and updates will appear here.</p>
+    </div>
+}

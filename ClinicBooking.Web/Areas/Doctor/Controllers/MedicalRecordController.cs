@@ -37,8 +37,11 @@ public class MedicalRecordController : Controller
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
+        var doctor = await GetCurrentDoctorAsync();
+        if (doctor is null) return NotFound("Doctor profile not found.");
+
         var record = await _medicalRecordService.GetByIdAsync(id);
-        if (record == null) return NotFound();
+        if (record == null || record.DoctorId != doctor.Id) return NotFound();
 
         return View(record);
     }
@@ -46,8 +49,13 @@ public class MedicalRecordController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(int appointmentId)
     {
+        var doctor = await GetCurrentDoctorAsync();
+        if (doctor is null) return NotFound("Doctor profile not found.");
+
         var appointment = await _db.Appointments.FindAsync(appointmentId);
-        if (appointment == null) return NotFound();
+        if (appointment == null || appointment.DoctorId != doctor.Id) return NotFound();
+        if (appointment.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Completed)
+            return Conflict("A medical record can be added after the appointment is completed.");
 
         var existingRecord = await _medicalRecordService.GetByAppointmentIdAsync(appointmentId);
         if (existingRecord != null)
@@ -60,7 +68,6 @@ public class MedicalRecordController : Controller
         var model = new CreateRecordViewModel
         {
             AppointmentId = appointmentId,
-            PatientId = appointment.PatientId,
             PatientName = patient?.FullName ?? "Unknown",
             // Add a single empty row for the prescription UI
             Items = new List<PrescriptionItemViewModel> { new PrescriptionItemViewModel() }
@@ -73,9 +80,21 @@ public class MedicalRecordController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateRecordViewModel model)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var doctor = await _doctorService.GetByUserIdAsync(userId!);
-        if (doctor == null) return Unauthorized();
+        var doctor = await GetCurrentDoctorAsync();
+        if (doctor is null) return NotFound("Doctor profile not found.");
+
+        var appointment = await _db.Appointments.FindAsync(model.AppointmentId);
+        if (appointment is null || appointment.DoctorId != doctor.Id)
+            return NotFound();
+        if (appointment.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Completed)
+            return Conflict("A medical record can be added after the appointment is completed.");
+
+        var existingRecord = await _medicalRecordService.GetByAppointmentIdAsync(model.AppointmentId);
+        if (existingRecord is not null)
+            return RedirectToAction(nameof(Details), new { id = existingRecord.Id });
+
+        var patient = await _db.Patients.FindAsync(appointment.PatientId);
+        model.PatientName = patient?.FullName ?? "Unknown";
 
         // If prescription is not requested, clear any item validation errors
         if (!model.AddPrescription)
@@ -92,7 +111,7 @@ public class MedicalRecordController : Controller
 
         var record = new MedicalRecord
         {
-            PatientId = model.PatientId,
+            PatientId = appointment.PatientId,
             DoctorId = doctor.Id,
             AppointmentId = model.AppointmentId,
             Diagnosis = model.Diagnosis,
@@ -123,14 +142,13 @@ public class MedicalRecordController : Controller
         await _medicalRecordService.CreateRecordWithPrescriptionAsync(record, prescription);
         
         // Mark appointment as Completed
-        var appointment = await _db.Appointments.FindAsync(model.AppointmentId);
-        if (appointment != null)
-        {
-            appointment.Status = ClinicBooking.Domain.Enums.AppointmentStatus.Completed;
-            await _db.SaveChangesAsync();
-        }
-
         TempData["SuccessMessage"] = "Medical record and prescription saved successfully.";
         return RedirectToAction("Index", "Appointment", new { area = "Doctor" });
+    }
+
+    private async Task<ClinicBooking.Domain.Entities.Doctor?> GetCurrentDoctorAsync()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return await _doctorService.GetByUserIdAsync(userId!);
     }
 }

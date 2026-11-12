@@ -27,6 +27,8 @@ public class MappingProfile : Profile
         CreateMap<Appointment, AppointmentDto>()
             .ForMember(d => d.DoctorName, opt => opt.MapFrom(s => s.Doctor != null ? s.Doctor.FullName : ""))
             .ForMember(d => d.PatientName, opt => opt.MapFrom(s => s.Patient != null ? s.Patient.FullName : ""))
+            .ForMember(d => d.PatientPhone, opt => opt.MapFrom(s => s.Patient != null ? s.Patient.PhoneNumber : null))
+            .ForMember(d => d.PatientEmail, opt => opt.MapFrom(s => s.Patient != null ? s.Patient.Email : null))
             .ForMember(d => d.PaymentId, opt => opt.MapFrom(s => s.Payment != null ? s.Payment.Id : (int?)null))
             .ForMember(d => d.PaymentAmount, opt => opt.MapFrom(s => s.Payment != null ? s.Payment.Amount : (decimal?)null))
             .ForMember(d => d.PaymentCurrency, opt => opt.MapFrom(s => s.Payment != null ? s.Payment.Currency : "EGP"))
@@ -51,5 +53,8 @@ public class MappingProfile : Profile
 
         // Specialty
         CreateMap<Specialty, SpecialtyDto>();
+
+        // Notification
+        CreateMap<Notification, NotificationDto>();
     }
 }

@@ -2,6 +2,7 @@
 @model IReadOnlyList<AppointmentDto>
 @{
     ViewData["Title"] = "My Appointments";
+    int cutoff = ViewBag.CancellationCutoffHours ?? 2;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
@@ -25,6 +26,13 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
+@if (TempData["Error"] is not null)
+{
+    <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <div class="card border-0 shadow-sm rounded-4">
     <div class="card-body p-0">
@@ -45,6 +53,9 @@
                     {
                         @foreach (var a in Model)
                         {
+                            var rowOpen = a.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled
+                                       && a.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Completed;
+                            var rowCanChange = rowOpen && AppointmentPolicy.IsWithinChangeWindow(a.AppointmentDate, a.StartTime, DateTime.Now, cutoff);
                             <tr>
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
@@ -68,8 +79,11 @@
                                     <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary rounded-pill px-3 me-1">
                                         <i class="fa-solid fa-eye me-1"></i> Details
                                     </a>
-                                    @if (a.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Cancelled && a.Status != ClinicBooking.Domain.Enums.AppointmentStatus.Completed)
+                                    @if (rowCanChange)
                                     {
+                                        <a asp-action="Reschedule" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary rounded-pill px-3 me-1">
+                                            <i class="fa-solid fa-calendar-day me-1"></i> Reschedule
+                                        </a>
                                         <form asp-action="Cancel" method="post" class="d-inline">
                                             <input type="hidden" name="AppointmentId" value="@a.Id" />
                                             <input type="hidden" name="CancellationReason" value="Cancelled by patient" />
@@ -78,6 +92,12 @@
                                                 <i class="fa-solid fa-xmark me-1"></i> Cancel
                                             </button>
                                         </form>
+                                    }
+                                    else if (rowOpen)
+                                    {
+                                        <span class="text-muted small" title="Online changes close @cutoff hour(s) before the appointment">
+                                            <i class="fa-solid fa-lock"></i>
+                                        </span>
                                     }
                                 </td>
                             </tr>

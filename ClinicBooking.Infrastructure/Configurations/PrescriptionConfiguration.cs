@@ -26,6 +26,9 @@ public class PrescriptionConfiguration : IEntityTypeConfiguration<Prescription>
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(p => p.PatientId);
+
+        // Matching query filter for the soft-deleted Doctor/Patient principals.
+        builder.HasQueryFilter(p => !p.IsDeleted && !p.Doctor.IsDeleted && !p.Patient.IsDeleted);
     }
 }
 
@@ -45,5 +48,11 @@ public class PrescriptionItemConfiguration : IEntityTypeConfiguration<Prescripti
         builder.Property(i => i.Frequency).IsRequired().HasMaxLength(100);
         builder.Property(i => i.Duration).IsRequired().HasMaxLength(100);
         builder.Property(i => i.Instructions).HasMaxLength(500);
+
+        // Matching query filter for the soft-deleted Prescription chain.
+        builder.HasQueryFilter(i => !i.IsDeleted
+            && !i.Prescription.IsDeleted
+            && !i.Prescription.Doctor.IsDeleted
+            && !i.Prescription.Patient.IsDeleted);
     }
 }

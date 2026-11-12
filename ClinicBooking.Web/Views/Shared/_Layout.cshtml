@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - CareClinic</title>
     <!-- Bootstrap 5 CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap.min.css" asp-append-version="true" />
     <!-- FontAwesome for Premium Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome.min.css" asp-append-version="true" />
     <!-- Custom CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
+@using System.Security.Claims
+@inject ClinicBooking.Application.Common.Interfaces.INotificationService NotificationService
+@{
+    var unreadNotifications = 0;
+    if (User.Identity?.IsAuthenticated == true && User.IsInRole("Patient"))
+    {
+        unreadNotifications = await NotificationService.GetUnreadCountAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    }
+}
 <body class="d-flex flex-column min-vh-100">
     <header>
         <nav class="navbar navbar-expand-lg navbar-light fixed-top">
@@ -21,7 +30,7 @@
                     </div>
                     CareClinic
                 </a>
-                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse" id="navbarContent">
@@ -33,20 +42,21 @@
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#"><i class="fa-solid fa-shield-halved me-1 text-primary"></i> Admin Panel</a>
+                                <button class="nav-link dropdown-toggle bg-transparent border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-shield-halved me-1 text-primary" aria-hidden="true"></i> Admin Panel</button>
                                 <ul class="dropdown-menu border-0 shadow-sm mt-2">
                                     <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="fa-solid fa-chart-pie me-2"></i> Dashboard</a></li>
                                     <li><a class="dropdown-item" asp-area="Admin" asp-controller="Doctor" asp-action="Index"><i class="fa-solid fa-user-doctor me-2"></i> Doctors</a></li>
                                     <li><a class="dropdown-item" asp-area="Admin" asp-controller="Specialty" asp-action="Index"><i class="fa-solid fa-stethoscope me-2"></i> Specialties</a></li>
                                     <li><a class="dropdown-item" asp-area="Admin" asp-controller="Patient" asp-action="Index"><i class="fa-solid fa-users me-2"></i> Patients</a></li>
                                     <li><a class="dropdown-item" asp-area="Admin" asp-controller="Appointment" asp-action="Index"><i class="fa-solid fa-calendar-check me-2"></i> Appointments</a></li>
+                                    <li><a class="dropdown-item" asp-area="Admin" asp-controller="AuditLog" asp-action="Index"><i class="fa-solid fa-clipboard-list me-2"></i> Audit Log</a></li>
                                 </ul>
                             </li>
                         }
                         @if (User.IsInRole("Doctor"))
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#"><i class="fa-solid fa-stethoscope me-1 text-primary"></i> Doctor Panel</a>
+                                <button class="nav-link dropdown-toggle bg-transparent border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-stethoscope me-1 text-primary" aria-hidden="true"></i> Doctor Panel</button>
                                 <ul class="dropdown-menu border-0 shadow-sm mt-2">
                                     <li><a class="dropdown-item" asp-area="Doctor" asp-controller="Dashboard" asp-action="Index"><i class="fa-solid fa-chart-line me-2"></i> Dashboard</a></li>
                                     <li><a class="dropdown-item" asp-area="Doctor" asp-controller="Appointment" asp-action="Index"><i class="fa-solid fa-calendar-check me-2"></i> Appointments</a></li>
@@ -58,12 +68,21 @@
                         @if (User.IsInRole("Patient"))
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#"><i class="fa-regular fa-circle-user me-1 text-primary"></i> My Account</a>
+                                <button class="nav-link dropdown-toggle bg-transparent border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-regular fa-circle-user me-1 text-primary" aria-hidden="true"></i> My Account</button>
                                 <ul class="dropdown-menu border-0 shadow-sm mt-2">
                                     <li><a class="dropdown-item" asp-area="Patient" asp-controller="Dashboard" asp-action="Index"><i class="fa-solid fa-table-columns me-2"></i> Dashboard</a></li>
                                     <li><a class="dropdown-item" asp-area="Patient" asp-controller="Booking" asp-action="SelectDoctor"><i class="fa-solid fa-calendar-plus me-2"></i> Book Appointment</a></li>
                                     <li><a class="dropdown-item" asp-area="Patient" asp-controller="Appointment" asp-action="Index"><i class="fa-solid fa-list me-2"></i> My Appointments</a></li>
                                     <li><a class="dropdown-item" asp-area="Patient" asp-controller="MedicalRecord" asp-action="Index"><i class="fa-solid fa-file-medical me-2"></i> Medical Records</a></li>
+                                    <li>
+                                        <a class="dropdown-item d-flex justify-content-between align-items-center" asp-area="Patient" asp-controller="Notifications" asp-action="Index">
+                                            <span><i class="fa-regular fa-bell me-2"></i> Notifications</span>
+                                            @if (unreadNotifications > 0)
+                                            {
+                                                <span class="badge bg-danger rounded-pill">@unreadNotifications</span>
+                                            }
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
                         }
@@ -71,6 +90,18 @@
                     <ul class="navbar-nav align-items-center">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            @if (User.IsInRole("Patient"))
+                            {
+                                <li class="nav-item me-2">
+                                    <a class="nav-link position-relative" asp-area="Patient" asp-controller="Notifications" asp-action="Index" title="Notifications">
+                                        <i class="fa-regular fa-bell fs-5"></i>
+                                        @if (unreadNotifications > 0)
+                                        {
+                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">@unreadNotifications</span>
+                                        }
+                                    </a>
+                                </li>
+                            }
                             <li class="nav-item d-flex align-items-center me-3 d-none d-lg-block">
                                 <span class="badge bg-light text-dark border px-3 py-2 rounded-pill"><i class="fa-regular fa-user me-1"></i> @User.Identity!.Name</span>
                             </li>
@@ -104,16 +135,16 @@
             <div class="text-muted mb-2 mb-md-0 fw-medium">
                 &copy; @DateTime.Now.Year - <i class="fa-solid fa-heart-pulse text-danger mx-1"></i> CareClinic System.
             </div>
-            <div>
-                <a href="#" class="text-muted text-decoration-none me-3"><i class="fa-brands fa-facebook fs-5"></i></a>
-                <a href="#" class="text-muted text-decoration-none me-3"><i class="fa-brands fa-twitter fs-5"></i></a>
-                <a href="#" class="text-muted text-decoration-none"><i class="fa-brands fa-instagram fs-5"></i></a>
+            <div class="d-flex gap-3">
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="text-muted text-decoration-none">Home</a>
+                <a asp-area="Patient" asp-controller="Booking" asp-action="SelectDoctor" class="text-muted text-decoration-none">Find a doctor</a>
+                <a asp-area="" asp-controller="Account" asp-action="Register" class="text-muted text-decoration-none">Create account</a>
             </div>
         </div>
     </footer>
 
     <!-- Bootstrap & Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/bootstrap.bundle.min.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

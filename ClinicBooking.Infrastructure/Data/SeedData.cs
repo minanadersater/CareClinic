@@ -261,24 +261,18 @@ public static class SeedData
             if (!await db.Payments.AnyAsync(p => p.AppointmentId == appointment.Id))
             {
                 var doctor = doctorProfiles.First(d => d.Id == appointment.DoctorId);
-                var isPaid = appointment.Status == AppointmentStatus.Completed || appointment.Status == AppointmentStatus.Confirmed;
-                var method = appointment.Status switch
-                {
-                    AppointmentStatus.Completed => PaymentMethod.CreditCard,
-                    AppointmentStatus.Confirmed => PaymentMethod.InstaPay,
-                    _ => PaymentMethod.Cash
-                };
+                var isPaid = appointment.Status == AppointmentStatus.Completed;
 
                 db.Payments.Add(new Payment
                 {
                     AppointmentId = appointment.Id,
                     Amount = doctor.ConsultationFee,
                     Currency = "EGP",
-                    Method = method,
+                    Method = PaymentMethod.Cash,
                     Status = isPaid ? PaymentStatus.Paid : PaymentStatus.Pending,
-                    TransactionId = isPaid ? $"TXN-EGP-{100000 + appointment.Id}" : null,
+                    TransactionId = null,
                     PaidAt = isPaid ? DateTime.UtcNow.AddDays(-2) : null,
-                    PaymentNotes = isPaid ? "تم الدفع إلكترونياً بنجاح" : "الدفع نقداً في العيادة",
+                    PaymentNotes = isPaid ? "تم تحصيل المبلغ نقداً (بيانات تجريبية)" : "الدفع نقداً في العيادة",
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 });

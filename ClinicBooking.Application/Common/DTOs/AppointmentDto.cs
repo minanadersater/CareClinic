@@ -9,6 +9,8 @@ public class AppointmentDto
     public string DoctorName { get; set; } = default!;
     public int PatientId { get; set; }
     public string PatientName { get; set; } = default!;
+    public string? PatientPhone { get; set; }
+    public string? PatientEmail { get; set; }
     public DateOnly AppointmentDate { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
@@ -43,6 +45,14 @@ public class CancelAppointmentDto
 {
     public int AppointmentId { get; set; }
     public string? CancellationReason { get; set; }
+}
+
+public class RescheduleAppointmentDto
+{
+    public int AppointmentId { get; set; }
+    public DateOnly AppointmentDate { get; set; }
+    public TimeSpan StartTime { get; set; }
+    public string? Reason { get; set; }
 }
 
 public class AvailableSlotDto

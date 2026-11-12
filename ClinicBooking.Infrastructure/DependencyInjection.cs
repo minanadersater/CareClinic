@@ -39,6 +39,11 @@ public static class DependencyInjection
         services.AddScoped<ClinicBooking.Application.Services.IPaymentService>(sp =>
             (ClinicBooking.Application.Services.IPaymentService)sp.GetRequiredService<IPaymentService>());
 
+        services.AddScoped<IAuditLogService, AuditLogService>();
+
+        services.AddScoped<ClinicBooking.Application.Common.Interfaces.INotificationService, NotificationService>();
+        services.AddScoped<ClinicBooking.Application.Common.Interfaces.IAppointmentReminderService, AppointmentReminderService>();
+
         return services;
     }
 }

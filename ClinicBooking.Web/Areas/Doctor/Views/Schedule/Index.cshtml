@@ -28,15 +28,25 @@
         </div>
         
         <form asp-action="Index" method="post">
+            <div class="row mb-4">
+                <div class="col-sm-6 col-md-4">
+                    <label asp-for="AppointmentDurationMinutes" class="form-label fw-bold"></label>
+                    <div class="input-group">
+                        <input asp-for="AppointmentDurationMinutes" class="form-control rounded-start-3 bg-light border-0" min="10" max="120" step="5" />
+                        <span class="input-group-text">minutes</span>
+                    </div>
+                    <span asp-validation-for="AppointmentDurationMinutes" class="text-danger small"></span>
+                    <small class="form-text text-muted">This duration applies to all of your working days.</small>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle border-top border-bottom">
                     <thead class="bg-light text-muted">
                         <tr>
-                            <th style="width: 20%" class="ps-3">Day of Week</th>
+                            <th style="width: 25%" class="ps-3">Day of Week</th>
                             <th style="width: 15%" class="text-center">Working?</th>
-                            <th style="width: 25%">Start Time</th>
-                            <th style="width: 25%">End Time</th>
-                            <th style="width: 15%" class="pe-3">Slot (Mins)</th>
+                            <th style="width: 30%">Start Time</th>
+                            <th style="width: 30%" class="pe-3">End Time</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,9 +67,6 @@
                                 </td>
                                 <td>
                                     <input type="time" asp-for="Schedules[i].EndTime" class="form-control rounded-3 bg-light border-0 time-input-@i" disabled="@(!Model.Schedules[i].IsWorkingDay)" />
-                                </td>
-                                <td class="pe-3">
-                                    <input type="number" asp-for="Schedules[i].SlotDurationMinutes" class="form-control rounded-3 bg-light border-0 time-input-@i" min="10" max="120" step="5" disabled="@(!Model.Schedules[i].IsWorkingDay)" />
                                 </td>
                             </tr>
                         }
@@ -90,8 +97,6 @@
                         if (input.type === 'time') {
                             if (input.name.includes("StartTime")) input.value = "09:00";
                             if (input.name.includes("EndTime")) input.value = "17:00";
-                        } else if (input.type === 'number') {
-                            input.value = "30";
                         }
                     }
                 });
